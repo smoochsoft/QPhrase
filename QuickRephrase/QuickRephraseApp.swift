@@ -26,6 +26,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotkeyManager: HotkeyManager!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Prevent multiple instances
+        if let bundleID = Bundle.main.bundleIdentifier {
+            let runningApps = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID)
+            if runningApps.count > 1 {
+                // Another instance is already running - activate it and quit this one
+                for app in runningApps where app != NSRunningApplication.current {
+                    app.activate(options: .activateIgnoringOtherApps)
+                }
+                NSApp.terminate(nil)
+                return
+            }
+        }
+
         // Hide dock icon - menu bar app only
         NSApp.setActivationPolicy(.accessory)
 
