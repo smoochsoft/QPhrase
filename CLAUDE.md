@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-QPhrase is a native macOS menu bar application that provides AI-powered text transformation using global hotkeys. Users select text in any application and press a hotkey to transform it via OpenAI or Anthropic APIs.
+QPhrase is a native macOS menu bar application that provides AI-powered text transformation using global hotkeys. Users select text in any application and press a hotkey to transform it via OpenAI, Anthropic, Groq, or Google Gemini APIs.
 
 ## Build & Run
 
@@ -33,10 +33,10 @@ No external dependencies - uses only system frameworks.
 QPhraseApp.swift    Entry point, AppDelegate manages menu bar popover lifecycle
     ↓
 MenuBarView.swift         Quick access menu from status bar
-SettingsView.swift        Tabbed settings (Prompts, API, General)
+SettingsView.swift        Tabbed settings (General, API, Prompts)
     ↓
-AIService.swift           Singleton handling OpenAI/Anthropic API calls
-HotkeyManager.swift       Global hotkey registration via Carbon Events
+AIService.swift           Singleton handling OpenAI/Anthropic/Groq/Gemini API calls
+HotkeyManager.swift       Global hotkey interception via CGEventTap
 PromptManager.swift       Prompt CRUD with UserDefaults persistence
 SettingsManager.swift     Configuration + Keychain for API keys
 ```
@@ -50,9 +50,9 @@ SettingsManager.swift     Configuration + Keychain for API keys
 
 ## Key Implementation Details
 
-**Global Hotkeys**: Uses Carbon Events framework (kEventClassKeyboard). Key codes mapped in `HotkeyManager.swift:keyCodeToString`.
+**Global Hotkeys**: Uses CGEventTap to intercept keyboard events system-wide. Only registered hotkeys are consumed; all other keyboard shortcuts pass through normally. Key codes mapped in `HotkeyManager.swift:keyCodeToString`.
 
-**API Keys**: Stored in macOS Keychain under service `com.quickrephrase.api` with accounts "openai" and "anthropic". Never store API keys in UserDefaults or code.
+**API Keys**: Stored in macOS Keychain under service `com.qphrase.api` with accounts "openai", "anthropic", "groq", and "gemini". Never store API keys in UserDefaults or code.
 
 **Prompts**: JSON-encoded in UserDefaults key `QPhrase.Prompts`. Each prompt has optional `HotkeyConfig` with keyCode and modifiers.
 
@@ -73,6 +73,8 @@ All source in `QPhrase/`:
 
 OpenAI: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo
 Anthropic: claude-sonnet-4-20250514, claude-3-5-haiku-20241022, claude-3-opus-20240229
+Groq: llama-3.3-70b-versatile, llama-3.1-8b-instant, mixtral-8x7b-32768, gemma2-9b-it
+Gemini: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash
 
 ## Testing
 

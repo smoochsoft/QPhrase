@@ -74,16 +74,22 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 
 ## Settings
 
-### API Settings
-- **Provider**: OpenAI, Anthropic, Groq, or Gemini
-- **Model**: Choose from available models per provider
-- **API Keys**: Securely stored in macOS Keychain
+Settings are organized into three tabs: **General → API → Prompts**
 
-### General Settings
+### General
 - **Notifications**: Show/hide processing notifications
 - **Sounds**: Enable/disable completion sounds
 - **Launch at Login**: Start with macOS
-- **Quit Button**: Power button in settings footer to quit the app (or use ⌘Q)
+
+### API
+- **Provider**: Segmented picker to switch between OpenAI, Anthropic, Groq, or Gemini
+- **Model**: Choose from available models for the selected provider
+- **API Key**: Only shows the key field for your selected provider (stored in macOS Keychain)
+
+### Prompts
+- View and manage your text transformation prompts
+- Assign global hotkeys to each prompt
+- Enable/disable prompts as needed
 
 ## Troubleshooting
 
@@ -137,7 +143,7 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 ## Tech Stack
 
 - SwiftUI for the interface
-- Carbon Events for global hotkeys
+- CGEventTap for global hotkey interception
 - Security framework for Keychain storage
 - URLSession for API calls
 
