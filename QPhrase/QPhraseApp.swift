@@ -124,23 +124,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setupMenu() {
-        let menu = NSMenu()
+        let mainMenu = NSMenu()
 
+        // App menu
+        let appMenu = NSMenu()
         let settingsItem = NSMenuItem(title: "Settings...", action: #selector(handleOpenSettings), keyEquivalent: ",")
         settingsItem.keyEquivalentModifierMask = .command
-        menu.addItem(settingsItem)
-
-        menu.addItem(NSMenuItem.separator())
-
+        appMenu.addItem(settingsItem)
+        appMenu.addItem(NSMenuItem.separator())
         let quitItem = NSMenuItem(title: "Quit QPhrase", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = .command
-        menu.addItem(quitItem)
+        appMenu.addItem(quitItem)
 
-        // Set as main menu so shortcuts work
-        let mainMenu = NSMenu()
         let appMenuItem = NSMenuItem()
-        appMenuItem.submenu = menu
+        appMenuItem.submenu = appMenu
         mainMenu.addItem(appMenuItem)
+
+        // Edit menu (required for copy/paste to work in text fields)
+        let editMenu = NSMenu(title: "Edit")
+        editMenu.addItem(NSMenuItem(title: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x"))
+        editMenu.addItem(NSMenuItem(title: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c"))
+        editMenu.addItem(NSMenuItem(title: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v"))
+        editMenu.addItem(NSMenuItem(title: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a"))
+
+        let editMenuItem = NSMenuItem()
+        editMenuItem.submenu = editMenu
+        mainMenu.addItem(editMenuItem)
+
         NSApp.mainMenu = mainMenu
     }
 
