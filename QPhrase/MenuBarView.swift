@@ -7,43 +7,48 @@ struct MenuBarView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 10) {
                 Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
                     .resizable()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 18, height: 18)
                 Text("QPhrase")
-                    .font(.headline)
+                    .font(.system(.headline, weight: .semibold))
                 Spacer()
             }
-            .padding()
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .background(Color(.windowBackgroundColor))
 
             Divider()
+                .opacity(0.5)
 
             // Onboarding / API Status Warning
             if !settingsManager.isConfigured {
-                VStack(spacing: 12) {
+                VStack(spacing: 10) {
                     Image(systemName: "key.fill")
-                        .font(.system(size: 28))
+                        .font(.system(size: 24))
                         .foregroundColor(.orange)
 
                     Text("Welcome to QPhrase!")
-                        .font(.headline)
+                        .font(.system(.subheadline, weight: .semibold))
 
                     Text("Add your API key to start transforming text with AI.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Button(action: { openSettings() }) {
                         Text("Get Started")
+                            .font(.subheadline)
                             .fontWeight(.medium)
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(.regular)
                 }
-                .padding()
-                .background(Color.orange.opacity(0.08))
+                .padding(16)
+                .background(Color.orange.opacity(0.06))
             }
 
             // Prompts List
@@ -51,46 +56,55 @@ struct MenuBarView: View {
                 let enabledPrompts = promptManager.prompts.filter { $0.isEnabled }
                 LazyVStack(spacing: 0) {
                     ForEach(enabledPrompts) { prompt in
-                        PromptRowView(prompt: prompt)
+                        PopoverPromptRow(prompt: prompt)
                     }
 
                     if enabledPrompts.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "text.bubble")
-                                .font(.title)
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 28))
+                                .foregroundColor(.secondary.opacity(0.4))
                             Text("No prompts enabled")
-                                .font(.caption)
+                                .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 40)
                     }
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 6)
             }
 
             Divider()
+                .opacity(0.5)
 
-            // Footer with actions
-            HStack(spacing: 16) {
+            // Footer
+            HStack(spacing: 0) {
                 Button(action: { openSettings() }) {
-                    Label("Settings", systemImage: "gear")
+                    HStack(spacing: 6) {
+                        Image(systemName: "gear")
+                            .font(.system(size: 13))
+                        Text("Settings")
+                            .font(.subheadline)
+                    }
+                    .foregroundColor(.primary)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(.primary)
 
                 Spacer()
 
                 Text("⌘Q to Quit")
                     .font(.caption2)
-                    .foregroundColor(.secondary.opacity(0.7))
+                    .foregroundColor(.secondary.opacity(0.6))
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 8)
             .background(Color(.windowBackgroundColor))
         }
-        .frame(width: 300, height: 360)
+        .frame(width: 280, height: 340)
     }
 
     private func openSettings() {
@@ -98,15 +112,15 @@ struct MenuBarView: View {
     }
 }
 
-struct PromptRowView: View {
+struct PopoverPromptRow: View {
     let prompt: Prompt
     @State private var isHovered = false
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(prompt.name)
-                    .fontWeight(.medium)
+                    .font(.system(.subheadline, weight: .medium))
 
                 Text(prompt.instruction)
                     .font(.caption)
@@ -118,16 +132,16 @@ struct PromptRowView: View {
 
             if let hotkey = prompt.hotkey {
                 Text(hotkey.displayString)
-                    .font(.system(.caption, design: .monospaced))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 4)
                     .background(Color(.controlBackgroundColor))
-                    .cornerRadius(4)
+                    .clipShape(RoundedRectangle(cornerRadius: 5))
             }
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(isHovered ? Color(.selectedContentBackgroundColor).opacity(0.5) : Color.clear)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(isHovered ? Color(.selectedContentBackgroundColor).opacity(0.4) : Color.clear)
         .contentShape(Rectangle())
         .onHover { hovering in
             isHovered = hovering
