@@ -38,6 +38,15 @@ struct SettingsView: View {
                 .keyboardShortcut(.escape, modifiers: [])
                 .hidden()
 
+                Button(action: {
+                    NSApplication.shared.terminate(nil)
+                }) {
+                    Image(systemName: "power")
+                }
+                .buttonStyle(.borderless)
+                .foregroundColor(.red)
+                .help("Quit QPhrase")
+
                 Spacer()
 
                 Button("Done") {

@@ -9,7 +9,7 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 - **Works Everywhere** - Slack, Gmail, Notion, VS Code, any app where you can select text
 - **Custom Prompts** - Create your own text transformations (fix grammar, make professional, summarize, etc.)
 - **Global Hotkeys** - Assign keyboard shortcuts to each prompt
-- **Multiple AI Providers** - Choose between OpenAI (GPT-4o, GPT-4o-mini, etc.) or Anthropic (Claude)
+- **Multiple AI Providers** - Choose between OpenAI, Anthropic, Groq, or Google Gemini
 - **Privacy First** - Your API key stays on your Mac (stored in Keychain)
 - **Menu Bar App** - Lives quietly in your menu bar, always ready
 
@@ -75,14 +75,15 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 ## Settings
 
 ### API Settings
-- **Provider**: OpenAI or Anthropic
-- **Model**: Choose from available models
-- **API Key**: Securely stored in macOS Keychain
+- **Provider**: OpenAI, Anthropic, Groq, or Gemini
+- **Model**: Choose from available models per provider
+- **API Keys**: Securely stored in macOS Keychain
 
 ### General Settings
 - **Notifications**: Show/hide processing notifications
 - **Sounds**: Enable/disable completion sounds
 - **Launch at Login**: Start with macOS
+- **Quit Button**: Power button in settings footer to quit the app (or use ⌘Q)
 
 ## Troubleshooting
 
@@ -103,7 +104,7 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 ## Requirements
 
 - macOS 13.0 (Ventura) or later
-- OpenAI API key or Anthropic API key
+- API key from at least one provider: OpenAI, Anthropic, Groq, or Google Gemini
 
 ## Getting API Keys
 
@@ -117,10 +118,20 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 2. Create a new API key
 3. Add credits to your account
 
+### Groq
+1. Go to [console.groq.com/keys](https://console.groq.com/keys)
+2. Create a new API key
+3. Free tier available with rate limits
+
+### Google Gemini
+1. Go to [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
+2. Create a new API key
+3. Free tier available with rate limits
+
 ## Privacy
 
 - API keys are stored securely in your macOS Keychain
-- Text is sent directly to OpenAI/Anthropic - not through any other servers
+- Text is sent directly to your chosen AI provider - not through any other servers
 - No data is collected or stored by this app
 
 ## Tech Stack
