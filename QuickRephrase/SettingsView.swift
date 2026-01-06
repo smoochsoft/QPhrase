@@ -1,5 +1,6 @@
 import SwiftUI
 import Carbon
+import ServiceManagement
 
 struct SettingsView: View {
     @EnvironmentObject var promptManager: PromptManager
@@ -56,6 +57,7 @@ struct PromptsSettingsView: View {
     @EnvironmentObject var promptManager: PromptManager
     @State private var selectedPrompt: Prompt?
     @State private var editorMode: PromptEditorMode?
+    @State private var conflictingIDs: Set<UUID> = []
 
     enum PromptEditorMode: Identifiable {
         case new
@@ -87,9 +89,17 @@ struct PromptsSettingsView: View {
                                 Text(prompt.name)
                                     .fontWeight(.medium)
                                 if let hotkey = prompt.hotkey {
-                                    Text(hotkey.displayString)
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
+                                    HStack(spacing: 4) {
+                                        Text(hotkey.displayString)
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        if conflictingIDs.contains(prompt.id) {
+                                            Image(systemName: "exclamationmark.triangle.fill")
+                                                .font(.caption)
+                                                .foregroundColor(.orange)
+                                                .help("Hotkey conflict - this shortcut may not work")
+                                        }
+                                    }
                                 }
                             }
                             Spacer()
@@ -102,6 +112,11 @@ struct PromptsSettingsView: View {
                     }
                 }
                 .listStyle(.inset)
+                .onReceive(NotificationCenter.default.publisher(for: .hotkeyConflictDetected)) { notification in
+                    if let ids = notification.object as? Set<UUID> {
+                        conflictingIDs = ids
+                    }
+                }
 
                 HStack {
                     Button(action: {
@@ -513,16 +528,39 @@ struct GeneralSettingsView: View {
 
 struct LaunchAtLoginToggle: View {
     @State private var launchAtLogin = false
-    
+    @State private var errorMessage: String?
+
     var body: some View {
-        Toggle("Launch at login", isOn: $launchAtLogin)
-            .onChange(of: launchAtLogin) { newValue in
-                // Would use SMAppService in production
-                UserDefaults.standard.set(newValue, forKey: "launchAtLogin")
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle("Launch at login", isOn: $launchAtLogin)
+                .onChange(of: launchAtLogin) { newValue in
+                    setLaunchAtLogin(enabled: newValue)
+                }
+                .onAppear {
+                    launchAtLogin = SMAppService.mainApp.status == .enabled
+                }
+
+            if let error = errorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
             }
-            .onAppear {
-                launchAtLogin = UserDefaults.standard.bool(forKey: "launchAtLogin")
+        }
+    }
+
+    private func setLaunchAtLogin(enabled: Bool) {
+        do {
+            if enabled {
+                try SMAppService.mainApp.register()
+            } else {
+                try SMAppService.mainApp.unregister()
             }
+            errorMessage = nil
+        } catch {
+            errorMessage = "Failed: \(error.localizedDescription)"
+            // Revert the toggle state
+            launchAtLogin = SMAppService.mainApp.status == .enabled
+        }
     }
 }
 
@@ -530,6 +568,9 @@ struct LaunchAtLoginToggle: View {
 extension Notification.Name {
     static let hotkeyRecorded = Notification.Name("hotkeyRecorded")
     static let refreshHotkeys = Notification.Name("refreshHotkeys")
+    static let processingStarted = Notification.Name("processingStarted")
+    static let processingFinished = Notification.Name("processingFinished")
+    static let hotkeyConflictDetected = Notification.Name("hotkeyConflictDetected")
 }
 
 #Preview {

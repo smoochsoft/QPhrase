@@ -18,6 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
     var settingsWindow: NSWindow?
+    private var normalIcon: NSImage?
+    private var processingIcon: NSImage?
 
     let promptManager = PromptManager()
     let settingsManager = SettingsManager()
@@ -30,11 +32,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Setup menu bar
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
+        // Prepare icons
+        if let image = NSImage(named: "MenuBarIcon") {
+            image.isTemplate = true
+            normalIcon = image
+        }
+        processingIcon = NSImage(systemSymbolName: "ellipsis.circle", accessibilityDescription: "Processing")
+        processingIcon?.isTemplate = true
+
         if let button = statusItem.button {
-            if let image = NSImage(named: "MenuBarIcon") {
-                image.isTemplate = true
-                button.image = image
-            }
+            button.image = normalIcon
             button.action = #selector(togglePopover)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
         }
@@ -71,8 +78,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             object: nil
         )
 
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleProcessingStarted),
+            name: .processingStarted,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleProcessingFinished),
+            name: .processingFinished,
+            object: nil
+        )
+
         // Request accessibility permissions
         requestAccessibilityPermissions()
+
+        // Show onboarding if not configured
+        if !settingsManager.isConfigured {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.showOnboardingPopover()
+            }
+        }
+    }
+
+    private func showOnboardingPopover() {
+        if let button = statusItem.button {
+            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            NSApp.activate(ignoringOtherApps: true)
+        }
     }
 
     private func setupMenu() {
@@ -98,6 +133,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func refreshHotkeys() {
         hotkeyManager.registerAllHotkeys()
+    }
+
+    @objc func handleProcessingStarted() {
+        statusItem.button?.image = processingIcon
+    }
+
+    @objc func handleProcessingFinished() {
+        statusItem.button?.image = normalIcon
     }
 
     @objc func handleOpenSettings() {

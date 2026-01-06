@@ -2,8 +2,25 @@ import Foundation
 
 class AIService {
     static let shared = AIService()
-    
-    private init() {}
+
+    private let session: URLSession
+
+    private init() {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        config.waitsForConnectivity = false
+        config.httpMaximumConnectionsPerHost = 4
+        config.requestCachePolicy = .reloadIgnoringLocalCacheData
+        session = URLSession(configuration: config)
+    }
+
+    /// Calculate appropriate max_tokens based on input length to reduce latency
+    private func calculateMaxTokens(for text: String) -> Int {
+        let estimatedInputTokens = text.count / 4
+        // Allow 2x input for transformations, clamped between 256 and 2048
+        return max(256, min(estimatedInputTokens * 2, 2048))
+    }
     
     func transform(text: String, prompt: Prompt, settings: SettingsManager) async throws -> String {
         switch settings.selectedProvider {
@@ -33,17 +50,17 @@ class AIService {
                 ["role": "user", "content": text]
             ],
             "temperature": 0.3,
-            "max_tokens": 4096
+            "max_tokens": calculateMaxTokens(for: text)
         ]
-        
+
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
-        
+
+        let (data, response) = try await session.data(for: request)
+
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.invalidResponse
         }
-        
+
         if httpResponse.statusCode != 200 {
             if let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let error = errorJson["error"] as? [String: Any],
@@ -52,7 +69,7 @@ class AIService {
             }
             throw AIError.apiError("HTTP \(httpResponse.statusCode)")
         }
-        
+
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard let choices = json?["choices"] as? [[String: Any]],
               let firstChoice = choices.first,
@@ -60,10 +77,10 @@ class AIService {
               let content = message["content"] as? String else {
             throw AIError.parseError
         }
-        
+
         return content.trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    
+
     // MARK: - Anthropic
     private func callAnthropic(text: String, instruction: String, apiKey: String, model: String) async throws -> String {
         let url = URL(string: "https://api.anthropic.com/v1/messages")!
@@ -75,7 +92,7 @@ class AIService {
         
         let body: [String: Any] = [
             "model": model,
-            "max_tokens": 4096,
+            "max_tokens": calculateMaxTokens(for: text),
             "system": instruction,
             "messages": [
                 ["role": "user", "content": text]
@@ -84,7 +101,7 @@ class AIService {
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.invalidResponse
@@ -124,12 +141,12 @@ class AIService {
                 ["role": "user", "content": text]
             ],
             "temperature": 0.3,
-            "max_tokens": 4096
+            "max_tokens": calculateMaxTokens(for: text)
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.invalidResponse
@@ -172,13 +189,13 @@ class AIService {
             ],
             "generationConfig": [
                 "temperature": 0.3,
-                "maxOutputTokens": 4096
+                "maxOutputTokens": calculateMaxTokens(for: text)
             ]
         ]
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AIError.invalidResponse

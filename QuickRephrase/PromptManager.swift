@@ -74,27 +74,27 @@ class PromptManager: ObservableObject {
         prompts = [
             Prompt(
                 name: "Fix Grammar",
-                instruction: "Fix any grammar, spelling, and punctuation errors in the following text. Keep the same tone and meaning. Only output the corrected text, nothing else.",
+                instruction: "Fix any grammar, spelling, and punctuation errors in the following text. Preserve all formatting, markdown, code blocks, lists, and special characters exactly as they appear. Maintain the same tone, meaning, and approximate length. Only output the corrected text, nothing else.",
                 hotkey: HotkeyConfig(keyCode: 5, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧G
             ),
             Prompt(
                 name: "Make Professional",
-                instruction: "Rewrite the following text to sound more professional and polished. Keep the same meaning. Only output the rewritten text, nothing else.",
+                instruction: "Rewrite the following text to sound more professional and polished. Preserve all formatting, markdown, code blocks, and special characters. Keep the same meaning and approximate length. Only output the rewritten text, nothing else.",
                 hotkey: HotkeyConfig(keyCode: 35, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧P
             ),
             Prompt(
                 name: "Make Concise",
-                instruction: "Rewrite the following text to be more concise while keeping the key points. Only output the rewritten text, nothing else.",
+                instruction: "Rewrite the following text to be more concise while keeping all key points. Preserve any formatting, markdown, code blocks, and special characters. Only output the rewritten text, nothing else.",
                 hotkey: HotkeyConfig(keyCode: 8, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧C
             ),
             Prompt(
                 name: "Make Friendly",
-                instruction: "Rewrite the following text to sound friendlier and more casual. Only output the rewritten text, nothing else.",
+                instruction: "Rewrite the following text to sound friendlier and more casual. Preserve all formatting, markdown, code blocks, and special characters. Keep the same meaning and approximate length. Only output the rewritten text, nothing else.",
                 hotkey: HotkeyConfig(keyCode: 3, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧F
             ),
             Prompt(
                 name: "Expand",
-                instruction: "Expand the following text with more detail and explanation while keeping the same meaning and tone. Only output the expanded text, nothing else.",
+                instruction: "Expand the following text with more detail and explanation while keeping the same meaning and tone. Preserve all formatting, markdown, code blocks, and special characters. Only output the expanded text, nothing else.",
                 hotkey: HotkeyConfig(keyCode: 14, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧E
             )
         ]

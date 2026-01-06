@@ -20,34 +20,41 @@ struct MenuBarView: View {
 
             Divider()
 
-            // API Status Warning
+            // Onboarding / API Status Warning
             if !settingsManager.isConfigured {
-                Button(action: { openSettings() }) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        Text("Configure API key in settings")
-                            .font(.caption)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                VStack(spacing: 12) {
+                    Image(systemName: "key.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.orange)
+
+                    Text("Welcome to QuickRephrase!")
+                        .font(.headline)
+
+                    Text("Add your API key to start transforming text with AI.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button(action: { openSettings() }) {
+                        Text("Get Started")
+                            .fontWeight(.medium)
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(.borderedProminent)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 10)
-                .background(Color.orange.opacity(0.1))
+                .padding()
+                .background(Color.orange.opacity(0.08))
             }
 
             // Prompts List
             ScrollView {
+                let enabledPrompts = promptManager.prompts.filter { $0.isEnabled }
                 LazyVStack(spacing: 0) {
-                    ForEach(promptManager.prompts.filter { $0.isEnabled }) { prompt in
+                    ForEach(enabledPrompts) { prompt in
                         PromptRowView(prompt: prompt)
                     }
 
-                    if promptManager.prompts.filter({ $0.isEnabled }).isEmpty {
+                    if enabledPrompts.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "text.bubble")
                                 .font(.title)

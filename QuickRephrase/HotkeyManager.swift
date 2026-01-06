@@ -10,6 +10,7 @@ class HotkeyManager {
     private var registeredHotkeys: [EventHotKeyRef] = []
     private var hotkeyIDToPrompt: [UInt32: UUID] = [:]
     private var nextHotkeyID: UInt32 = 1
+    private(set) var conflictingPromptIDs: Set<UUID> = []
     
     init(promptManager: PromptManager, settingsManager: SettingsManager) {
         self.promptManager = promptManager
@@ -55,18 +56,24 @@ class HotkeyManager {
     
     func registerAllHotkeys() {
         unregisterAllHotkeys()
-        
+        conflictingPromptIDs.removeAll()
+
         for prompt in promptManager.prompts where prompt.isEnabled {
             if let hotkey = prompt.hotkey {
                 registerHotkey(for: prompt, config: hotkey)
             }
         }
+
+        // Post notification if there are conflicts
+        if !conflictingPromptIDs.isEmpty {
+            NotificationCenter.default.post(name: .hotkeyConflictDetected, object: conflictingPromptIDs)
+        }
     }
-    
+
     private func registerHotkey(for prompt: Prompt, config: HotkeyConfig) {
         var hotkeyRef: EventHotKeyRef?
         let hotkeyID = EventHotKeyID(signature: OSType(0x5152_5048), id: nextHotkeyID) // "QRPH"
-        
+
         let status = RegisterEventHotKey(
             config.keyCode,
             config.modifiers,
@@ -75,12 +82,36 @@ class HotkeyManager {
             0,
             &hotkeyRef
         )
-        
+
         if status == noErr, let ref = hotkeyRef {
             registeredHotkeys.append(ref)
             hotkeyIDToPrompt[nextHotkeyID] = prompt.id
             nextHotkeyID += 1
+        } else {
+            // Hotkey registration failed - likely a conflict
+            conflictingPromptIDs.insert(prompt.id)
         }
+    }
+
+    /// Test if a hotkey can be registered (for UI validation)
+    func testHotkeyAvailability(_ config: HotkeyConfig) -> Bool {
+        var hotkeyRef: EventHotKeyRef?
+        let testID = EventHotKeyID(signature: OSType(0x5152_5048), id: 99999)
+
+        let status = RegisterEventHotKey(
+            config.keyCode,
+            config.modifiers,
+            testID,
+            GetApplicationEventTarget(),
+            0,
+            &hotkeyRef
+        )
+
+        if status == noErr, let ref = hotkeyRef {
+            UnregisterEventHotKey(ref)
+            return true
+        }
+        return false
     }
     
     private func unregisterAllHotkeys() {
@@ -99,33 +130,35 @@ class HotkeyManager {
             showNotification(title: "QuickRephrase", body: "Please configure your API key in settings")
             return
         }
-        
+
         // Get selected text
         guard let selectedText = getSelectedText(), !selectedText.isEmpty else {
             showNotification(title: "QuickRephrase", body: "No text selected")
             return
         }
-        
-        // Show processing indicator
-        if settingsManager.showNotifications {
-            showNotification(title: "QuickRephrase", body: "Processing with \(prompt.name)...")
+
+        // Show processing indicator in menu bar
+        NotificationCenter.default.post(name: .processingStarted, object: nil)
+
+        defer {
+            NotificationCenter.default.post(name: .processingFinished, object: nil)
         }
-        
+
         do {
             let result = try await AIService.shared.transform(
                 text: selectedText,
                 prompt: prompt,
                 settings: settingsManager
             )
-            
+
             // Replace selected text with result
             replaceSelectedText(with: result)
-            
+
             // Play sound
             if settingsManager.playSound {
                 NSSound(named: .init("Tink"))?.play()
             }
-            
+
         } catch {
             showNotification(title: "QuickRephrase Error", body: error.localizedDescription)
             if settingsManager.playSound {
