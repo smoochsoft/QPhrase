@@ -14,7 +14,7 @@ struct QPhraseApp: App {
     }
 }
 
-class AppDelegate: NSObject, NSApplicationDelegate {
+class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem: NSStatusItem!
     var popover: NSPopover!
     var settingsWindow: NSWindow?
@@ -227,7 +227,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             settingsWindow = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 600, height: 520),
-                styleMask: [.titled, .closable],
+                styleMask: [.titled, .closable, .miniaturizable],
                 backing: .buffered,
                 defer: false
             )
@@ -235,9 +235,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             settingsWindow?.contentView = NSHostingView(rootView: settingsView)
             settingsWindow?.center()
             settingsWindow?.isReleasedWhenClosed = false
+            settingsWindow?.delegate = self
         }
 
+        // Temporarily become regular app to get proper keyboard focus
+        NSApp.setActivationPolicy(.regular)
         settingsWindow?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        // Return to accessory (menu bar only) mode when settings closes
+        NSApp.setActivationPolicy(.accessory)
     }
 }
