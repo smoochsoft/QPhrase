@@ -1,0 +1,21 @@
+# Build
+build/
+DerivedData/
+*.xcarchive
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+
+# DMG
+*.dmg
+dmg_contents/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Export options (contains signing info)
+ExportOptions.plist

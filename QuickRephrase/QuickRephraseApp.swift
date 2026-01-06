@@ -1,0 +1,177 @@
+import SwiftUI
+import AppKit
+
+@main
+struct QuickRephraseApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    var body: some Scene {
+        Settings {
+            SettingsView()
+                .environmentObject(appDelegate.promptManager)
+                .environmentObject(appDelegate.settingsManager)
+        }
+    }
+}
+
+class AppDelegate: NSObject, NSApplicationDelegate {
+    var statusItem: NSStatusItem!
+    var popover: NSPopover!
+    var settingsWindow: NSWindow?
+
+    let promptManager = PromptManager()
+    let settingsManager = SettingsManager()
+    var hotkeyManager: HotkeyManager!
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        // Hide dock icon - menu bar app only
+        NSApp.setActivationPolicy(.accessory)
+
+        // Setup menu bar
+        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+
+        if let button = statusItem.button {
+            if let image = NSImage(named: "MenuBarIcon") {
+                image.isTemplate = true
+                button.image = image
+            }
+            button.action = #selector(togglePopover)
+            button.sendAction(on: [.leftMouseUp, .rightMouseUp])
+        }
+
+        // Setup popover
+        popover = NSPopover()
+        popover.contentSize = NSSize(width: 300, height: 360)
+        popover.behavior = .transient
+        popover.contentViewController = NSHostingController(
+            rootView: MenuBarView()
+                .environmentObject(promptManager)
+                .environmentObject(settingsManager)
+        )
+
+        // Setup hotkey manager
+        hotkeyManager = HotkeyManager(promptManager: promptManager, settingsManager: settingsManager)
+        hotkeyManager.registerAllHotkeys()
+
+        // Setup app menu with keyboard shortcuts
+        setupMenu()
+
+        // Listen for notifications
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshHotkeys),
+            name: .refreshHotkeys,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleOpenSettings),
+            name: .openSettings,
+            object: nil
+        )
+
+        // Request accessibility permissions
+        requestAccessibilityPermissions()
+    }
+
+    private func setupMenu() {
+        let menu = NSMenu()
+
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(handleOpenSettings), keyEquivalent: ",")
+        settingsItem.keyEquivalentModifierMask = .command
+        menu.addItem(settingsItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let quitItem = NSMenuItem(title: "Quit QuickRephrase", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.keyEquivalentModifierMask = .command
+        menu.addItem(quitItem)
+
+        // Set as main menu so shortcuts work
+        let mainMenu = NSMenu()
+        let appMenuItem = NSMenuItem()
+        appMenuItem.submenu = menu
+        mainMenu.addItem(appMenuItem)
+        NSApp.mainMenu = mainMenu
+    }
+
+    @objc func refreshHotkeys() {
+        hotkeyManager.registerAllHotkeys()
+    }
+
+    @objc func handleOpenSettings() {
+        // Close popover first
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+
+        openSettings()
+    }
+
+    @objc func togglePopover(_ sender: NSStatusBarButton) {
+        let event = NSApp.currentEvent
+
+        // Right-click shows context menu
+        if event?.type == .rightMouseUp {
+            showContextMenu()
+            return
+        }
+
+        // Left-click toggles popover
+        if popover.isShown {
+            popover.performClose(nil)
+        } else {
+            if let button = statusItem.button {
+                popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
+    }
+
+    private func showContextMenu() {
+        let menu = NSMenu()
+
+        let settingsItem = NSMenuItem(title: "Settings...", action: #selector(handleOpenSettings), keyEquivalent: "")
+        menu.addItem(settingsItem)
+
+        menu.addItem(NSMenuItem.separator())
+
+        let quitItem = NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        menu.addItem(quitItem)
+
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    func requestAccessibilityPermissions() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+        let trusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        if !trusted {
+            print("Accessibility permissions needed for text selection")
+        }
+    }
+
+    func openSettings() {
+        if settingsWindow == nil {
+            let settingsView = SettingsView()
+                .environmentObject(promptManager)
+                .environmentObject(settingsManager)
+
+            settingsWindow = NSWindow(
+                contentRect: NSRect(x: 0, y: 0, width: 600, height: 520),
+                styleMask: [.titled, .closable],
+                backing: .buffered,
+                defer: false
+            )
+            settingsWindow?.title = "QuickRephrase Settings"
+            settingsWindow?.contentView = NSHostingView(rootView: settingsView)
+            settingsWindow?.center()
+            settingsWindow?.isReleasedWhenClosed = false
+        }
+
+        settingsWindow?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+}
