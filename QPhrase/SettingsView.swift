@@ -510,7 +510,7 @@ struct GeneralSettingsView: View {
             
             Section("About") {
                 HStack {
-                    Text("QuickRephrase")
+                    Text("QPhrase")
                         .fontWeight(.medium)
                     Spacer()
                     Text("Version 1.0.0")

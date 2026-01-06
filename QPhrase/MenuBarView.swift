@@ -11,7 +11,7 @@ struct MenuBarView: View {
                 Image(nsImage: NSImage(named: "AppIcon") ?? NSImage())
                     .resizable()
                     .frame(width: 20, height: 20)
-                Text("QuickRephrase")
+                Text("QPhrase")
                     .font(.headline)
                 Spacer()
             }
@@ -27,7 +27,7 @@ struct MenuBarView: View {
                         .font(.system(size: 28))
                         .foregroundColor(.orange)
 
-                    Text("Welcome to QuickRephrase!")
+                    Text("Welcome to QPhrase!")
                         .font(.headline)
 
                     Text("Add your API key to start transforming text with AI.")

@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		001 /* QuickRephraseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* QuickRephraseApp.swift */; };
+		001 /* QPhraseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* QPhraseApp.swift */; };
 		002 /* PromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* PromptManager.swift */; };
 		003 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* SettingsManager.swift */; };
 		004 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* AIService.swift */; };
@@ -18,8 +18,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		100 /* QuickRephrase.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QuickRephrase.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		101 /* QuickRephraseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickRephraseApp.swift; sourceTree = "<group>"; };
+		100 /* QPhrase.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QPhrase.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		101 /* QPhraseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QPhraseApp.swift; sourceTree = "<group>"; };
 		102 /* PromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptManager.swift; sourceTree = "<group>"; };
 		103 /* SettingsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManager.swift; sourceTree = "<group>"; };
 		104 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
@@ -28,7 +28,7 @@
 		107 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		110 /* QuickRephrase.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QuickRephrase.entitlements; sourceTree = "<group>"; };
+		110 /* QPhrase.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QPhrase.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,15 +45,15 @@
 		300 = {
 			isa = PBXGroup;
 			children = (
-				301 /* QuickRephrase */,
+				301 /* QPhrase */,
 				302 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		301 /* QuickRephrase */ = {
+		301 /* QPhrase */ = {
 			isa = PBXGroup;
 			children = (
-				101 /* QuickRephraseApp.swift */,
+				101 /* QPhraseApp.swift */,
 				102 /* PromptManager.swift */,
 				103 /* SettingsManager.swift */,
 				104 /* AIService.swift */,
@@ -62,15 +62,15 @@
 				107 /* SettingsView.swift */,
 				108 /* Assets.xcassets */,
 				109 /* Info.plist */,
-				110 /* QuickRephrase.entitlements */,
+				110 /* QPhrase.entitlements */,
 			);
-			path = QuickRephrase;
+			path = QPhrase;
 			sourceTree = "<group>";
 		};
 		302 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				100 /* QuickRephrase.app */,
+				100 /* QPhrase.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -78,9 +78,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		400 /* QuickRephrase */ = {
+		400 /* QPhrase */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 500 /* Build configuration list for PBXNativeTarget "QuickRephrase" */;
+			buildConfigurationList = 500 /* Build configuration list for PBXNativeTarget "QPhrase" */;
 			buildPhases = (
 				401 /* Sources */,
 				200 /* Frameworks */,
@@ -90,9 +90,9 @@
 			);
 			dependencies = (
 			);
-			name = QuickRephrase;
-			productName = QuickRephrase;
-			productReference = 100 /* QuickRephrase.app */;
+			name = QPhrase;
+			productName = QPhrase;
+			productReference = 100 /* QPhrase.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -110,7 +110,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 601 /* Build configuration list for PBXProject "QuickRephrase" */;
+			buildConfigurationList = 601 /* Build configuration list for PBXProject "QPhrase" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -123,7 +123,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				400 /* QuickRephrase */,
+				400 /* QPhrase */,
 			);
 		};
 /* End PBXProject section */
@@ -144,7 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				001 /* QuickRephraseApp.swift in Sources */,
+				001 /* QPhraseApp.swift in Sources */,
 				002 /* PromptManager.swift in Sources */,
 				003 /* SettingsManager.swift in Sources */,
 				004 /* AIService.swift in Sources */,
@@ -280,7 +280,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = QuickRephrase/QuickRephrase.entitlements;
+				CODE_SIGN_ENTITLEMENTS = QPhrase/QPhrase.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -288,7 +288,7 @@
 				DEVELOPMENT_TEAM = 83J33PGX2K;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = QuickRephrase/Info.plist;
+				INFOPLIST_FILE = QPhrase/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -296,7 +296,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.quickrephrase.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.qphrase.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -308,7 +308,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = QuickRephrase/QuickRephrase.entitlements;
+				CODE_SIGN_ENTITLEMENTS = QPhrase/QPhrase.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -316,7 +316,7 @@
 				DEVELOPMENT_TEAM = 83J33PGX2K;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = QuickRephrase/Info.plist;
+				INFOPLIST_FILE = QPhrase/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -324,7 +324,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.quickrephrase.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.qphrase.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -334,7 +334,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		500 /* Build configuration list for PBXNativeTarget "QuickRephrase" */ = {
+		500 /* Build configuration list for PBXNativeTarget "QPhrase" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				702 /* Debug */,
@@ -343,7 +343,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		601 /* Build configuration list for PBXProject "QuickRephrase" */ = {
+		601 /* Build configuration list for PBXProject "QPhrase" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				700 /* Debug */,

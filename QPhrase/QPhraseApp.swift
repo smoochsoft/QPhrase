@@ -2,7 +2,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct QuickRephraseApp: App {
+struct QPhraseApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
     var body: some Scene {
@@ -132,7 +132,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
 
-        let quitItem = NSMenuItem(title: "Quit QuickRephrase", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit QPhrase", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quitItem.keyEquivalentModifierMask = .command
         menu.addItem(quitItem)
 
@@ -221,7 +221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 backing: .buffered,
                 defer: false
             )
-            settingsWindow?.title = "QuickRephrase Settings"
+            settingsWindow?.title = "QPhrase Settings"
             settingsWindow?.contentView = NSHostingView(rootView: settingsView)
             settingsWindow?.center()
             settingsWindow?.isReleasedWhenClosed = false

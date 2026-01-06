@@ -94,7 +94,7 @@ class SettingsManager: ObservableObject {
     
     // MARK: - Keychain Helpers
     private func saveToKeychain(key: String, value: String) {
-        let service = "com.quickrephrase.api"
+        let service = "com.qphrase.api"
         let data = value.data(using: .utf8)!
         
         // Delete existing
@@ -118,7 +118,7 @@ class SettingsManager: ObservableObject {
     }
     
     private func loadFromKeychain(key: String) -> String? {
-        let service = "com.quickrephrase.api"
+        let service = "com.qphrase.api"
         
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,

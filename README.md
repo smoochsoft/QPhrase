@@ -1,8 +1,8 @@
-# QuickRephrase
+# QPhrase
 
 A lightweight macOS menu bar app that lets you transform text anywhere using AI. Select text in any app, press a hotkey, and instantly get rephrased/corrected text.
 
-![QuickRephrase](screenshot.png)
+![QPhrase](screenshot.png)
 
 ## Features
 
@@ -25,7 +25,7 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 ### From Source (Xcode Required)
 
 1. Clone or download this repository
-2. Open `QuickRephrase.xcodeproj` in Xcode
+2. Open `QPhrase.xcodeproj` in Xcode
 3. Select your development team in Signing & Capabilities
 4. Build and run (⌘R)
 5. The app will appear in your menu bar
@@ -34,7 +34,7 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 
 1. **Grant Accessibility Permissions**
    - When prompted, go to System Settings → Privacy & Security → Accessibility
-   - Enable QuickRephrase
+   - Enable QPhrase
    - This allows the app to read selected text and paste results
 
 2. **Configure API Key**

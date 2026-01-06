@@ -61,7 +61,7 @@ struct HotkeyConfig: Codable, Equatable, Hashable {
 class PromptManager: ObservableObject {
     @Published var prompts: [Prompt] = []
     
-    private let saveKey = "QuickRephrase.Prompts"
+    private let saveKey = "QPhrase.Prompts"
     
     init() {
         loadPrompts()

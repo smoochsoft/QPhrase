@@ -4,19 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-QuickRephrase is a native macOS menu bar application that provides AI-powered text transformation using global hotkeys. Users select text in any application and press a hotkey to transform it via OpenAI or Anthropic APIs.
+QPhrase is a native macOS menu bar application that provides AI-powered text transformation using global hotkeys. Users select text in any application and press a hotkey to transform it via OpenAI or Anthropic APIs.
 
 ## Build & Run
 
 ```bash
 # Open project in Xcode
-open QuickRephrase.xcodeproj
+open QPhrase.xcodeproj
 
 # Build and run from Xcode
 ⌘R
 
 # Command line build
-xcodebuild -project QuickRephrase.xcodeproj -scheme QuickRephrase -configuration Release build
+xcodebuild -project QPhrase.xcodeproj -scheme QPhrase -configuration Release build
 ```
 
 Requirements:
@@ -30,7 +30,7 @@ No external dependencies - uses only system frameworks.
 ## Architecture
 
 ```
-QuickRephraseApp.swift    Entry point, AppDelegate manages menu bar popover lifecycle
+QPhraseApp.swift    Entry point, AppDelegate manages menu bar popover lifecycle
     ↓
 MenuBarView.swift         Quick access menu from status bar
 SettingsView.swift        Tabbed settings (Prompts, API, General)
@@ -54,14 +54,14 @@ SettingsManager.swift     Configuration + Keychain for API keys
 
 **API Keys**: Stored in macOS Keychain under service `com.quickrephrase.api` with accounts "openai" and "anthropic". Never store API keys in UserDefaults or code.
 
-**Prompts**: JSON-encoded in UserDefaults key `QuickRephrase.Prompts`. Each prompt has optional `HotkeyConfig` with keyCode and modifiers.
+**Prompts**: JSON-encoded in UserDefaults key `QPhrase.Prompts`. Each prompt has optional `HotkeyConfig` with keyCode and modifiers.
 
 **App Behavior**: LSUIElement=true (no dock icon), runs as menu bar accessory app.
 
 ## Source Files
 
-All source in `QuickRephrase/`:
-- `QuickRephraseApp.swift` - App entry, AppDelegate, menu bar setup
+All source in `QPhrase/`:
+- `QPhraseApp.swift` - App entry, AppDelegate, menu bar setup
 - `AIService.swift` - API calls (callOpenAI, callAnthropic methods)
 - `HotkeyManager.swift` - Carbon event handlers, keyboard simulation
 - `PromptManager.swift` - Prompt model and persistence

@@ -127,13 +127,13 @@ class HotkeyManager {
     private func executePrompt(_ prompt: Prompt) async {
         // Check API key
         guard settingsManager.isConfigured else {
-            showNotification(title: "QuickRephrase", body: "Please configure your API key in settings")
+            showNotification(title: "QPhrase", body: "Please configure your API key in settings")
             return
         }
 
         // Get selected text
         guard let selectedText = getSelectedText(), !selectedText.isEmpty else {
-            showNotification(title: "QuickRephrase", body: "No text selected")
+            showNotification(title: "QPhrase", body: "No text selected")
             return
         }
 
@@ -160,7 +160,7 @@ class HotkeyManager {
             }
 
         } catch {
-            showNotification(title: "QuickRephrase Error", body: error.localizedDescription)
+            showNotification(title: "QPhrase Error", body: error.localizedDescription)
             if settingsManager.playSound {
                 NSSound(named: .init("Basso"))?.play()
             }
