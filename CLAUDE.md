@@ -36,7 +36,7 @@ MenuBarView.swift         Quick access menu from status bar
 SettingsView.swift        Tabbed settings (General, API, Prompts)
     ↓
 AIService.swift           Singleton handling OpenAI/Anthropic/Groq/Gemini API calls
-HotkeyManager.swift       Global hotkey interception via CGEventTap
+HotkeyManager.swift       Global hotkey registration via Carbon Events
 PromptManager.swift       Prompt CRUD with UserDefaults persistence
 SettingsManager.swift     Configuration + Keychain for API keys
 ```
@@ -50,7 +50,7 @@ SettingsManager.swift     Configuration + Keychain for API keys
 
 ## Key Implementation Details
 
-**Global Hotkeys**: Uses CGEventTap to intercept keyboard events system-wide. Only registered hotkeys are consumed; all other keyboard shortcuts pass through normally. Key codes mapped in `HotkeyManager.swift:keyCodeToString`.
+**Global Hotkeys**: Uses Carbon Events framework (`RegisterEventHotKey`). Only registered hotkeys are intercepted; all other keyboard shortcuts pass through normally.
 
 **API Keys**: Stored in macOS Keychain under service `com.qphrase.api` with accounts "openai", "anthropic", "groq", and "gemini". Never store API keys in UserDefaults or code.
 

@@ -143,7 +143,7 @@ Settings are organized into three tabs: **General → API → Prompts**
 ## Tech Stack
 
 - SwiftUI for the interface
-- CGEventTap for global hotkey interception
+- Carbon Events for global hotkey registration
 - Security framework for Keychain storage
 - URLSession for API calls
 
