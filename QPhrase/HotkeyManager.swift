@@ -6,19 +6,26 @@ import UserNotifications
 class HotkeyManager {
     private var promptManager: PromptManager
     private var settingsManager: SettingsManager
+    private var historyManager: HistoryManager?
     private var eventHandler: EventHandlerRef?
     private var registeredHotkeys: [EventHotKeyRef] = []
     private var hotkeyIDToPrompt: [UInt32: UUID] = [:]
     private var nextHotkeyID: UInt32 = 1
     private(set) var conflictingPromptIDs: Set<UUID> = []
+    private var isProcessing = false  // Prevents rapid-fire API calls
 
-    init(promptManager: PromptManager, settingsManager: SettingsManager) {
+    init(promptManager: PromptManager, settingsManager: SettingsManager, historyManager: HistoryManager? = nil) {
         self.promptManager = promptManager
         self.settingsManager = settingsManager
+        self.historyManager = historyManager
         setupEventHandler()
 
         // Request notification permissions
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    func setHistoryManager(_ manager: HistoryManager) {
+        self.historyManager = manager
     }
 
     deinit {
@@ -125,24 +132,38 @@ class HotkeyManager {
 
     @MainActor
     private func executePrompt(_ prompt: Prompt) async {
+        // Prevent rapid-fire API calls
+        guard !isProcessing else {
+            return
+        }
+        isProcessing = true
+
+        defer {
+            isProcessing = false
+        }
+
         // Check API key
         guard settingsManager.isConfigured else {
-            showNotification(title: "QPhrase", body: "Please configure your API key in settings")
+            NotificationCenter.default.post(
+                name: .transformError,
+                object: nil,
+                userInfo: ["title": "No API Key", "details": "Please configure your API key in settings"]
+            )
             return
         }
 
         // Get selected text
-        guard let selectedText = getSelectedText(), !selectedText.isEmpty else {
-            showNotification(title: "QPhrase", body: "No text selected")
+        guard let selectedText = await getSelectedText(), !selectedText.isEmpty else {
+            NotificationCenter.default.post(
+                name: .transformError,
+                object: nil,
+                userInfo: ["title": "No Text Selected", "details": "Select some text before using the hotkey"]
+            )
             return
         }
 
         // Show processing indicator in menu bar
         NotificationCenter.default.post(name: .processingStarted, object: nil)
-
-        defer {
-            NotificationCenter.default.post(name: .processingFinished, object: nil)
-        }
 
         do {
             let result = try await AIService.shared.transform(
@@ -154,20 +175,105 @@ class HotkeyManager {
             // Replace selected text with result
             replaceSelectedText(with: result)
 
+            // Add to history
+            historyManager?.addEntry(
+                promptName: prompt.name,
+                promptID: prompt.id,
+                originalText: selectedText,
+                transformedText: result
+            )
+
+            // Post success notification
+            NotificationCenter.default.post(
+                name: .transformSuccess,
+                object: nil,
+                userInfo: ["promptName": prompt.name]
+            )
+
             // Play sound
             if settingsManager.playSound {
-                NSSound(named: .init("Tink"))?.play()
+                SoundManager.shared.playSuccess()
             }
 
         } catch {
-            showNotification(title: "QPhrase Error", body: error.localizedDescription)
+            // Post error notification
+            NotificationCenter.default.post(
+                name: .transformError,
+                object: nil,
+                userInfo: ["title": "Transform Failed", "details": error.localizedDescription]
+            )
+
             if settingsManager.playSound {
-                NSSound(named: .init("Basso"))?.play()
+                SoundManager.shared.playError()
             }
         }
     }
 
-    private func getSelectedText() -> String? {
+    /// Execute a prompt with provided text (for manual triggering from popover)
+    @MainActor
+    func executePromptWithText(_ prompt: Prompt, text: String) async {
+        guard !isProcessing else { return }
+        isProcessing = true
+
+        defer {
+            isProcessing = false
+        }
+
+        guard settingsManager.isConfigured else {
+            NotificationCenter.default.post(
+                name: .transformError,
+                object: nil,
+                userInfo: ["title": "No API Key", "details": "Please configure your API key in settings"]
+            )
+            return
+        }
+
+        NotificationCenter.default.post(name: .processingStarted, object: nil)
+
+        do {
+            let result = try await AIService.shared.transform(
+                text: text,
+                prompt: prompt,
+                settings: settingsManager
+            )
+
+            // Copy result to clipboard
+            let pasteboard = NSPasteboard.general
+            pasteboard.clearContents()
+            pasteboard.setString(result, forType: .string)
+
+            // Add to history
+            historyManager?.addEntry(
+                promptName: prompt.name,
+                promptID: prompt.id,
+                originalText: text,
+                transformedText: result
+            )
+
+            NotificationCenter.default.post(
+                name: .transformSuccess,
+                object: nil,
+                userInfo: ["promptName": prompt.name, "copiedToClipboard": true]
+            )
+
+            if settingsManager.playSound {
+                SoundManager.shared.playSuccess()
+            }
+
+        } catch {
+            NotificationCenter.default.post(
+                name: .transformError,
+                object: nil,
+                userInfo: ["title": "Transform Failed", "details": error.localizedDescription]
+            )
+
+            if settingsManager.playSound {
+                SoundManager.shared.playError()
+            }
+        }
+    }
+
+    private func getSelectedText() async -> String? {
         // Copy selected text to pasteboard
         let pasteboard = NSPasteboard.general
         let previousContents = pasteboard.string(forType: .string)
@@ -185,8 +291,8 @@ class HotkeyManager {
         keyDownC?.post(tap: .cghidEventTap)
         keyUpC?.post(tap: .cghidEventTap)
 
-        // Wait for pasteboard to update
-        Thread.sleep(forTimeInterval: 0.1)
+        // Wait for pasteboard to update (non-blocking)
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
 
         let selectedText = pasteboard.string(forType: .string)
 
@@ -229,12 +335,4 @@ class HotkeyManager {
         }
     }
 
-    private func showNotification(title: String, body: String) {
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
-    }
 }

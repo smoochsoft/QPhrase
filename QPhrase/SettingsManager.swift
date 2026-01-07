@@ -2,17 +2,19 @@ import Foundation
 import SwiftUI
 
 class SettingsManager: ObservableObject {
+    private let keychainQueue = DispatchQueue(label: "com.qphrase.keychain", qos: .utility)
+
     @Published var openAIKey: String {
-        didSet { saveToKeychain(key: "openai", value: openAIKey) }
+        didSet { saveToKeychainAsync(key: "openai", value: openAIKey) }
     }
     @Published var anthropicKey: String {
-        didSet { saveToKeychain(key: "anthropic", value: anthropicKey) }
+        didSet { saveToKeychainAsync(key: "anthropic", value: anthropicKey) }
     }
     @Published var groqKey: String {
-        didSet { saveToKeychain(key: "groq", value: groqKey) }
+        didSet { saveToKeychainAsync(key: "groq", value: groqKey) }
     }
     @Published var geminiKey: String {
-        didSet { saveToKeychain(key: "gemini", value: geminiKey) }
+        didSet { saveToKeychainAsync(key: "gemini", value: geminiKey) }
     }
     @Published var selectedProvider: AIProvider {
         didSet { UserDefaults.standard.set(selectedProvider.rawValue, forKey: "selectedProvider") }
@@ -25,6 +27,9 @@ class SettingsManager: ObservableObject {
     }
     @Published var playSound: Bool {
         didSet { UserDefaults.standard.set(playSound, forKey: "playSound") }
+    }
+    @Published var showPreview: Bool {
+        didSet { UserDefaults.standard.set(showPreview, forKey: "showPreview") }
     }
     
     enum AIProvider: String, CaseIterable {
@@ -56,6 +61,7 @@ class SettingsManager: ObservableObject {
         self.selectedModel = "gpt-4o-mini"
         self.showNotifications = true
         self.playSound = true
+        self.showPreview = false
 
         loadSettings()
     }
@@ -77,6 +83,7 @@ class SettingsManager: ObservableObject {
 
         showNotifications = UserDefaults.standard.object(forKey: "showNotifications") as? Bool ?? true
         playSound = UserDefaults.standard.object(forKey: "playSound") as? Bool ?? true
+        showPreview = UserDefaults.standard.object(forKey: "showPreview") as? Bool ?? false
     }
 
     var currentAPIKey: String {
@@ -93,10 +100,15 @@ class SettingsManager: ObservableObject {
     }
     
     // MARK: - Keychain Helpers
+    private func saveToKeychainAsync(key: String, value: String) {
+        keychainQueue.async { [weak self] in
+            self?.saveToKeychain(key: key, value: value)
+        }
+    }
+
     private func saveToKeychain(key: String, value: String) {
         let service = "com.qphrase.api"
-        let data = value.data(using: .utf8)!
-        
+
         // Delete existing
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -104,17 +116,19 @@ class SettingsManager: ObservableObject {
             kSecAttrAccount as String: key
         ]
         SecItemDelete(deleteQuery as CFDictionary)
-        
-        // Add new
-        if !value.isEmpty {
-            let addQuery: [String: Any] = [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: service,
-                kSecAttrAccount as String: key,
-                kSecValueData as String: data
-            ]
-            SecItemAdd(addQuery as CFDictionary, nil)
+
+        // Add new (only if value is non-empty and can be encoded)
+        guard !value.isEmpty, let data = value.data(using: .utf8) else {
+            return
         }
+
+        let addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: key,
+            kSecValueData as String: data
+        ]
+        SecItemAdd(addQuery as CFDictionary, nil)
     }
     
     private func loadFromKeychain(key: String) -> String? {

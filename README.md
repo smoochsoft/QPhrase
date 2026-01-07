@@ -12,6 +12,10 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 - **Multiple AI Providers** - Choose between OpenAI, Anthropic, Groq, or Google Gemini
 - **Privacy First** - Your API key stays on your Mac (stored in Keychain)
 - **Menu Bar App** - Lives quietly in your menu bar, always ready
+- **Transformation History** - View and copy past transformations
+- **Preview Mode** - Optionally preview changes before applying
+- **Run from Popover** - Click prompts directly to transform clipboard text
+- **Visual Feedback** - Animated icons, toast notifications, and sounds
 
 ## How It Works
 
@@ -76,20 +80,38 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 
 Settings are organized into three tabs: **General → API → Prompts**
 
+Use ⌘1/2/3 to quickly switch between tabs.
+
 ### General
 - **Notifications**: Show/hide processing notifications
 - **Sounds**: Enable/disable completion sounds
+- **Preview before applying**: Show a preview window before replacing text (hold ⌥ Option to temporarily toggle)
 - **Launch at Login**: Start with macOS
 
 ### API
-- **Provider**: Segmented picker to switch between OpenAI, Anthropic, Groq, or Gemini
+- **Provider Cards**: Visual grid to select between OpenAI, Anthropic, Groq, or Gemini
 - **Model**: Choose from available models for the selected provider
-- **API Key**: Only shows the key field for your selected provider (stored in macOS Keychain)
+- **API Key**: Secure field for your API key (stored in macOS Keychain)
+- Status indicators show which providers are configured
 
 ### Prompts
 - View and manage your text transformation prompts
 - Assign global hotkeys to each prompt
 - Enable/disable prompts as needed
+
+## Menu Bar Popover
+
+Click the menu bar icon to open the popover with two tabs:
+
+### Prompts Tab
+- View enabled prompts with their hotkeys
+- Hover to reveal "Run" button (transforms clipboard text)
+- Shows current clipboard preview
+
+### History Tab
+- View recent transformations (original → result)
+- Copy original or transformed text
+- Clear history or delete individual entries
 
 ## Troubleshooting
 

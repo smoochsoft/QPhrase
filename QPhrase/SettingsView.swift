@@ -32,6 +32,17 @@ struct SettingsView: View {
             Divider()
 
             HStack {
+                // Hidden keyboard shortcuts for tab switching
+                Button("") { selectedTab = 0 }
+                    .keyboardShortcut("1", modifiers: .command)
+                    .hidden()
+                Button("") { selectedTab = 1 }
+                    .keyboardShortcut("2", modifiers: .command)
+                    .hidden()
+                Button("") { selectedTab = 2 }
+                    .keyboardShortcut("3", modifiers: .command)
+                    .hidden()
+
                 Button("") {
                     NSApplication.shared.keyWindow?.close()
                 }
@@ -39,6 +50,11 @@ struct SettingsView: View {
                 .hidden()
 
                 Spacer()
+
+                // Keyboard shortcut hint
+                Text("\u{2318}1/2/3 to switch tabs")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
 
                 Button("Done") {
                     NSApplication.shared.keyWindow?.close()
@@ -65,6 +81,15 @@ struct GeneralSettingsView: View {
                 Text("Feedback")
             } footer: {
                 Text("Get notified when transformations complete or encounter errors.")
+                    .foregroundColor(.secondary)
+            }
+
+            Section {
+                Toggle("Preview before applying", isOn: $settingsManager.showPreview)
+            } header: {
+                Text("Behavior")
+            } footer: {
+                Text("Show a preview window before replacing text. Hold \u{2325} (Option) when pressing hotkey to temporarily toggle this setting.")
                     .foregroundColor(.secondary)
             }
 
@@ -150,65 +175,187 @@ struct APISettingsView: View {
         }
     }
 
+    private func hasKeyForProvider(_ provider: SettingsManager.AIProvider) -> Bool {
+        switch provider {
+        case .openai: return !settingsManager.openAIKey.isEmpty
+        case .anthropic: return !settingsManager.anthropicKey.isEmpty
+        case .groq: return !settingsManager.groqKey.isEmpty
+        case .gemini: return !settingsManager.geminiKey.isEmpty
+        }
+    }
+
     var body: some View {
-        Form {
-            Section {
-                Picker("", selection: $settingsManager.selectedProvider) {
-                    ForEach(SettingsManager.AIProvider.allCases, id: \.self) { provider in
-                        Text(provider.rawValue).tag(provider)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+                // Provider Cards
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Choose your AI provider")
+                        .font(.headline)
+
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 12) {
+                        ForEach(SettingsManager.AIProvider.allCases, id: \.self) { provider in
+                            ProviderCard(
+                                provider: provider,
+                                isSelected: settingsManager.selectedProvider == provider,
+                                hasKey: hasKeyForProvider(provider)
+                            ) {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    settingsManager.selectedProvider = provider
+                                    settingsManager.selectedModel = provider.models.first ?? ""
+                                    showAPIKey = false
+                                }
+                            }
+                        }
                     }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .padding(.vertical, 4)
-            } header: {
-                Text("Provider")
-            }
 
-            Section {
-                Picker("Model", selection: $settingsManager.selectedModel) {
-                    ForEach(settingsManager.selectedProvider.models, id: \.self) { model in
-                        Text(model).tag(model)
-                    }
-                }
-                .onChange(of: settingsManager.selectedProvider) { _ in
-                    settingsManager.selectedModel = settingsManager.selectedProvider.models.first ?? ""
-                    showAPIKey = false
-                }
+                Divider()
 
-                HStack(spacing: 12) {
-                    if showAPIKey {
-                        TextField("API Key", text: currentKeyBinding)
-                            .textFieldStyle(.roundedBorder)
-                    } else {
-                        SecureField("API Key", text: currentKeyBinding)
-                            .textFieldStyle(.roundedBorder)
-                    }
+                // Configuration
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Configuration")
+                        .font(.headline)
 
-                    Button(action: { showAPIKey.toggle() }) {
-                        Image(systemName: showAPIKey ? "eye.slash" : "eye")
+                    // Model picker
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Model")
+                            .font(.subheadline)
                             .foregroundColor(.secondary)
-                            .frame(width: 20)
-                    }
-                    .buttonStyle(.plain)
 
-                    if !currentKeyBinding.wrappedValue.isEmpty {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
+                        Picker("", selection: $settingsManager.selectedModel) {
+                            ForEach(settingsManager.selectedProvider.models, id: \.self) { model in
+                                Text(model).tag(model)
+                            }
+                        }
+                        .labelsHidden()
+                    }
+
+                    // API Key
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("API Key")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        HStack(spacing: 12) {
+                            if showAPIKey {
+                                TextField("Enter your API key", text: currentKeyBinding)
+                                    .textFieldStyle(.roundedBorder)
+                            } else {
+                                SecureField("Enter your API key", text: currentKeyBinding)
+                                    .textFieldStyle(.roundedBorder)
+                            }
+
+                            Button(action: { showAPIKey.toggle() }) {
+                                Image(systemName: showAPIKey ? "eye.slash" : "eye")
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 24, height: 24)
+                            }
+                            .buttonStyle(.plain)
+
+                            if !currentKeyBinding.wrappedValue.isEmpty {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+
+                        Link(destination: URL(string: apiKeyLink)!) {
+                            HStack(spacing: 4) {
+                                Text("Get \(settingsManager.selectedProvider.rawValue) API Key")
+                                Image(systemName: "arrow.up.right")
+                                    .font(.caption)
+                            }
+                            .font(.callout)
+                        }
+                        .padding(.top, 4)
                     }
                 }
 
-                Link("Get \(settingsManager.selectedProvider.rawValue) API Key →", destination: URL(string: apiKeyLink)!)
-                    .font(.callout)
-            } header: {
-                Text("Configuration")
-            } footer: {
-                Text("Your API key is stored securely in the macOS Keychain.")
-                    .foregroundColor(.secondary)
+                // Security note
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.shield")
+                        .foregroundColor(.green)
+                    Text("Your API key is stored securely in the macOS Keychain")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.top, 8)
+            }
+            .padding(20)
+        }
+    }
+}
+
+// MARK: - Provider Card
+struct ProviderCard: View {
+    let provider: SettingsManager.AIProvider
+    let isSelected: Bool
+    let hasKey: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    private var providerIcon: String {
+        switch provider {
+        case .openai: return "circle.hexagongrid"
+        case .anthropic: return "a.circle"
+        case .groq: return "bolt.circle"
+        case .gemini: return "sparkle"
+        }
+    }
+
+    private var providerColor: Color {
+        switch provider {
+        case .openai: return .green
+        case .anthropic: return .orange
+        case .groq: return .purple
+        case .gemini: return .blue
+        }
+    }
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 10) {
+                // Icon
+                Image(systemName: providerIcon)
+                    .font(.system(size: 28))
+                    .foregroundColor(isSelected ? providerColor : .secondary)
+
+                // Name
+                Text(provider.rawValue)
+                    .font(.subheadline)
+                    .fontWeight(isSelected ? .semibold : .regular)
+
+                // Status
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(hasKey ? Color.green : Color.orange)
+                        .frame(width: 6, height: 6)
+                    Text(hasKey ? "Ready" : "Set up")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background {
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? providerColor.opacity(0.1) : Color(.controlBackgroundColor))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(isSelected ? providerColor : Color.clear, lineWidth: 2)
+            }
+            .scaleEffect(isHovered ? 1.02 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovered = hovering
             }
         }
-        .formStyle(.grouped)
-        .padding()
     }
 }
 
@@ -656,10 +803,15 @@ extension Notification.Name {
     static let processingStarted = Notification.Name("processingStarted")
     static let processingFinished = Notification.Name("processingFinished")
     static let hotkeyConflictDetected = Notification.Name("hotkeyConflictDetected")
+    static let transformSuccess = Notification.Name("transformSuccess")
+    static let transformError = Notification.Name("transformError")
+    static let executePrompt = Notification.Name("executePrompt")
+    static let showHistory = Notification.Name("showHistory")
 }
 
 #Preview {
     SettingsView()
         .environmentObject(PromptManager())
         .environmentObject(SettingsManager())
+        .environmentObject(HistoryManager())
 }

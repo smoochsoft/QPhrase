@@ -119,15 +119,24 @@ class PromptManager: ObservableObject {
     }
     
     func savePrompts() {
-        if let encoded = try? JSONEncoder().encode(prompts) {
+        do {
+            let encoded = try JSONEncoder().encode(prompts)
             UserDefaults.standard.set(encoded, forKey: saveKey)
+        } catch {
+            print("QPhrase: Failed to encode prompts: \(error.localizedDescription)")
         }
     }
-    
+
     func loadPrompts() {
-        if let data = UserDefaults.standard.data(forKey: saveKey),
-           let decoded = try? JSONDecoder().decode([Prompt].self, from: data) {
-            prompts = decoded
+        guard let data = UserDefaults.standard.data(forKey: saveKey) else {
+            return
+        }
+
+        do {
+            prompts = try JSONDecoder().decode([Prompt].self, from: data)
+        } catch {
+            print("QPhrase: Failed to decode prompts: \(error.localizedDescription)")
+            // Keep existing prompts (or empty array) rather than crashing
         }
     }
 }

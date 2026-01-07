@@ -15,6 +15,11 @@
 		006 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* MenuBarView.swift */; };
 		007 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107 /* SettingsView.swift */; };
 		008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 108 /* Assets.xcassets */; };
+		1DB7F989C91A02FE9667C3BF /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A86269E8F6B16E9FC4368147 /* SoundManager.swift */; };
+		6D333D271681F3C87903D7C9 /* HistoryManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DBB02DE08938EADF846C78F /* HistoryManager.swift */; };
+		8A257A1050CB9FE0C97D8F51 /* PreviewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799B3562F06C210F8055A33B /* PreviewManager.swift */; };
+		BA4E340F47DAB1F4995E38B9 /* ToastManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8EBAF07A1ED90C86661638C /* ToastManager.swift */; };
+		F2B6F617FFF3C18501A01117 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C56198A6E4458616CF3EF9 /* OnboardingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +34,11 @@
 		108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		110 /* QPhrase.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QPhrase.entitlements; sourceTree = "<group>"; };
+		3DBB02DE08938EADF846C78F /* HistoryManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = HistoryManager.swift; path = QPhrase/HistoryManager.swift; sourceTree = SOURCE_ROOT; };
+		50C56198A6E4458616CF3EF9 /* OnboardingView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = OnboardingView.swift; path = QPhrase/OnboardingView.swift; sourceTree = SOURCE_ROOT; };
+		799B3562F06C210F8055A33B /* PreviewManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PreviewManager.swift; path = QPhrase/PreviewManager.swift; sourceTree = SOURCE_ROOT; };
+		A86269E8F6B16E9FC4368147 /* SoundManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SoundManager.swift; path = QPhrase/SoundManager.swift; sourceTree = SOURCE_ROOT; };
+		E8EBAF07A1ED90C86661638C /* ToastManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToastManager.swift; path = QPhrase/ToastManager.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +73,11 @@
 				108 /* Assets.xcassets */,
 				109 /* Info.plist */,
 				110 /* QPhrase.entitlements */,
+				3DBB02DE08938EADF846C78F /* HistoryManager.swift */,
+				A86269E8F6B16E9FC4368147 /* SoundManager.swift */,
+				E8EBAF07A1ED90C86661638C /* ToastManager.swift */,
+				799B3562F06C210F8055A33B /* PreviewManager.swift */,
+				50C56198A6E4458616CF3EF9 /* OnboardingView.swift */,
 			);
 			path = QPhrase;
 			sourceTree = "<group>";
@@ -151,6 +166,11 @@
 				005 /* HotkeyManager.swift in Sources */,
 				006 /* MenuBarView.swift in Sources */,
 				007 /* SettingsView.swift in Sources */,
+				6D333D271681F3C87903D7C9 /* HistoryManager.swift in Sources */,
+				1DB7F989C91A02FE9667C3BF /* SoundManager.swift in Sources */,
+				BA4E340F47DAB1F4995E38B9 /* ToastManager.swift in Sources */,
+				8A257A1050CB9FE0C97D8F51 /* PreviewManager.swift in Sources */,
+				F2B6F617FFF3C18501A01117 /* OnboardingView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

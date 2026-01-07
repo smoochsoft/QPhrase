@@ -10,6 +10,7 @@ struct QPhraseApp: App {
             SettingsView()
                 .environmentObject(appDelegate.promptManager)
                 .environmentObject(appDelegate.settingsManager)
+                .environmentObject(appDelegate.historyManager)
         }
     }
 }
@@ -19,10 +20,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var popover: NSPopover!
     var settingsWindow: NSWindow?
     private var normalIcon: NSImage?
-    private var processingIcon: NSImage?
+    private var processingIcons: [NSImage] = []
+    private var successIcon: NSImage?
+    private var errorIcon: NSImage?
+    private var animationTimer: Timer?
+    private var currentAnimationFrame = 0
 
     let promptManager = PromptManager()
     let settingsManager = SettingsManager()
+    let historyManager = HistoryManager()
     var hotkeyManager: HotkeyManager!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -50,8 +56,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             image.isTemplate = true
             normalIcon = image
         }
-        processingIcon = NSImage(systemSymbolName: "ellipsis.circle", accessibilityDescription: "Processing")
-        processingIcon?.isTemplate = true
+
+        // Create animated processing icons (spinner frames)
+        let spinnerSymbols = [
+            "circle.dotted",
+            "circle.bottomhalf.filled",
+            "circle.lefthalf.filled",
+            "circle.tophalf.filled",
+            "circle.righthalf.filled"
+        ]
+        processingIcons = spinnerSymbols.compactMap { symbolName in
+            let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Processing")
+            image?.isTemplate = true
+            return image
+        }
+
+        // Success/error icons for feedback
+        successIcon = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: "Success")
+        successIcon?.isTemplate = true
+        errorIcon = NSImage(systemSymbolName: "xmark.circle.fill", accessibilityDescription: "Error")
+        errorIcon?.isTemplate = true
 
         if let button = statusItem.button {
             button.image = normalIcon
@@ -61,16 +85,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         // Setup popover
         popover = NSPopover()
-        popover.contentSize = NSSize(width: 280, height: 340)
+        popover.contentSize = NSSize(width: 320, height: 420)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
             rootView: MenuBarView()
                 .environmentObject(promptManager)
                 .environmentObject(settingsManager)
+                .environmentObject(historyManager)
         )
 
         // Setup hotkey manager
-        hotkeyManager = HotkeyManager(promptManager: promptManager, settingsManager: settingsManager)
+        hotkeyManager = HotkeyManager(promptManager: promptManager, settingsManager: settingsManager, historyManager: historyManager)
         hotkeyManager.registerAllHotkeys()
 
         // Setup app menu with keyboard shortcuts
@@ -102,6 +127,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(handleProcessingFinished),
             name: .processingFinished,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTransformSuccess),
+            name: .transformSuccess,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTransformError),
+            name: .transformError,
+            object: nil
+        )
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleExecutePrompt),
+            name: .executePrompt,
             object: nil
         )
 
@@ -156,11 +202,76 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func handleProcessingStarted() {
-        statusItem.button?.image = processingIcon
+        startProcessingAnimation()
     }
 
     @objc func handleProcessingFinished() {
+        stopProcessingAnimation()
+    }
+
+    @objc func handleTransformSuccess(_ notification: Notification) {
+        stopProcessingAnimation()
+
+        // Show success icon briefly
+        statusItem.button?.image = successIcon
+
+        // Show toast
+        if let promptName = notification.userInfo?["promptName"] as? String {
+            ToastManager.shared.showSuccess("Transformed with \"\(promptName)\"")
+        } else {
+            ToastManager.shared.showSuccess("Text transformed")
+        }
+
+        // Restore normal icon after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.statusItem.button?.image = self?.normalIcon
+        }
+    }
+
+    @objc func handleTransformError(_ notification: Notification) {
+        stopProcessingAnimation()
+
+        // Show error icon briefly
+        statusItem.button?.image = errorIcon
+
+        // Show toast
+        let title = notification.userInfo?["title"] as? String ?? "Error"
+        let details = notification.userInfo?["details"] as? String
+        ToastManager.shared.showError(title, details: details)
+
+        // Restore normal icon after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            self?.statusItem.button?.image = self?.normalIcon
+        }
+    }
+
+    private func startProcessingAnimation() {
+        currentAnimationFrame = 0
+        animationTimer?.invalidate()
+
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.15, repeats: true) { [weak self] _ in
+            guard let self = self, !self.processingIcons.isEmpty else { return }
+            self.statusItem.button?.image = self.processingIcons[self.currentAnimationFrame]
+            self.currentAnimationFrame = (self.currentAnimationFrame + 1) % self.processingIcons.count
+        }
+    }
+
+    private func stopProcessingAnimation() {
+        animationTimer?.invalidate()
+        animationTimer = nil
         statusItem.button?.image = normalIcon
+    }
+
+    @objc func handleExecutePrompt(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let prompt = userInfo["prompt"] as? Prompt,
+              let text = userInfo["text"] as? String else {
+            return
+        }
+
+        Task {
+            await hotkeyManager.executePromptWithText(prompt, text: text)
+        }
     }
 
     @objc func handleOpenSettings() {
@@ -221,6 +332,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let settingsView = SettingsView()
                 .environmentObject(promptManager)
                 .environmentObject(settingsManager)
+                .environmentObject(historyManager)
 
             settingsWindow = NSWindow(
                 contentRect: NSRect(x: 0, y: 0, width: 700, height: 580),
