@@ -1,0 +1,16 @@
+// Configuration Template for QPhrase
+//
+// To build this project:
+// 1. Copy this file to Config.local.xcconfig
+// 2. Fill in your values below
+// 3. Do NOT commit Config.local.xcconfig
+//
+// To find your Development Team ID:
+// - Open Xcode > Settings > Accounts > Select your team > View Details
+// - Or run: security find-identity -v -p codesigning | head -1
+
+// Your Apple Development Team ID (10-character alphanumeric)
+DEVELOPMENT_TEAM =
+
+// Bundle identifier (must be unique, use reverse domain notation)
+PRODUCT_BUNDLE_IDENTIFIER = com.yourname.qphrase
