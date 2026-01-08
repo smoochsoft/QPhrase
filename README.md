@@ -2,8 +2,6 @@
 
 A lightweight macOS menu bar app that lets you transform text anywhere using AI. Select text in any app, press a hotkey, and instantly get rephrased/corrected text.
 
-![QPhrase](screenshot.png)
-
 ### See it in action
 
 ![QPhrase Demo](qphrase.gif)
