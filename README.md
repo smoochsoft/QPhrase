@@ -4,6 +4,10 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 
 ![QPhrase](screenshot.png)
 
+### See it in action
+
+![QPhrase Demo](qphrase.gif)
+
 ## Features
 
 - **Works Everywhere** - Slack, Gmail, Notion, VS Code, any app where you can select text
