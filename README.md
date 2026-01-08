@@ -2,8 +2,6 @@
 
 A lightweight macOS menu bar app that lets you transform text anywhere using AI. Select text in any app, press a hotkey, and instantly get rephrased/corrected text.
 
-![QPhrase](screenshot.png)
-
 ## Features
 
 - **Works Everywhere** - Slack, Gmail, Notion, VS Code, any app where you can select text
@@ -157,7 +155,7 @@ Settings are organized into three tabs: **General → API → Prompts**
 - gpt-4.1-nano, gpt-4.1-mini, gpt-5-nano, gpt-4.1, gpt-5-mini
 
 ### Anthropic
-- claude-opus-4.5, claude-sonnet-4.5, claude-3.7-sonnet, claude-3-5-haiku
+- claude-opus-4.5, claude-sonnet-4.5, claude-3.7-sonnet, claude-3-5-haiku-20241022
 
 ### Groq
 - llama-3.3-70b-versatile, llama-4-scout-17b, gpt-oss-120b, qwen-qwq-32b, llama-3.1-8b-instant
