@@ -7,16 +7,20 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 - **Works Everywhere** - Slack, Gmail, Notion, VS Code, any app where you can select text
 - **Custom Prompts** - Create your own text transformations (fix grammar, make professional, summarize, etc.)
 - **Global Hotkeys** - Assign keyboard shortcuts to each prompt
+- **Click-to-Run** - Run prompts directly from the menu bar without hotkeys
 - **Multiple AI Providers** - Choose between OpenAI, Anthropic, Groq, or Google Gemini
-- **Preview with Diff** - See changes highlighted character-by-character before applying
-- **Transformation History** - Review and reuse recent transformations
+- **Custom Models** - Add new models as they become available
+- **Preview with Diff** - See changes highlighted character-by-character before applying, with editable result
+- **Transformation History** - Review recent transformations and copy original text back
+- **Visual Feedback** - Optional sparkle overlay effects at cursor during transformations
+- **Hotkey Conflict Detection** - Warnings when shortcuts conflict with system or other apps
 - **Privacy First** - Your API key stays on your Mac (stored in Keychain)
 - **Menu Bar App** - Lives quietly in your menu bar, always ready
 
 ## How It Works
 
 1. Select text in any application
-2. Press your assigned hotkey (e.g., ⌘⇧G for "Fix Grammar")
+2. Press your assigned hotkey (e.g., ⌘⇧G for "Fix Grammar") or click a prompt in the menu bar
 3. The app copies your selection, sends it to the AI, and pastes the result back
 4. Done! The corrected text replaces your selection
 
@@ -47,8 +51,9 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
    - This allows the app to read selected text and paste results
 
 2. **Configure API Key**
-   - Click the menu bar icon → Settings (gear icon) → API tab
-   - Enter your OpenAI or Anthropic API key
+   - Click the menu bar icon → Settings (gear icon) → Providers tab
+   - Select your AI provider
+   - Enter your API key
    - Select your preferred model
 
 ## Default Prompts & Hotkeys
@@ -67,9 +72,11 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 2. Click the `+` button
 3. Enter:
    - **Name**: What to call this prompt
+   - **Icon**: Choose an SF Symbol icon
    - **Instruction**: The AI instruction (e.g., "Translate to Spanish")
    - **Hotkey**: Click "Record" and press your key combination
-4. Click Save
+4. Optionally test the prompt with sample text before saving
+5. Click Save
 
 ### Example Custom Prompts
 
@@ -83,22 +90,27 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 
 ## Settings
 
-Settings are organized into three tabs: **General → API → Prompts**
+Settings are organized into three tabs: **Preferences → Providers → Prompts**
 
-### General
-- **Notifications**: Show/hide processing notifications
-- **Sounds**: Enable/disable completion sounds
-- **Launch at Login**: Start with macOS
+### Preferences
+- **Show notifications**: System notifications for processing status
+- **Play sounds**: Audio feedback on completion/error
+- **Show overlay effects**: Sparkle animations near cursor during transformations
+- **Preview transformations**: Review and edit AI output before applying
+- **Launch at login**: Start QPhrase with macOS
 
-### API
-- **Provider**: Segmented picker to switch between OpenAI, Anthropic, Groq, or Gemini
-- **Model**: Choose from available models for the selected provider
-- **API Key**: Only shows the key field for your selected provider (stored in macOS Keychain)
+### Providers
+- **Provider**: Select between OpenAI, Anthropic, Groq, or Gemini
+- **Model**: Choose from available models (with speed indicators)
+- **Manage Models**: Add custom models as new ones become available
+- **API Key**: Securely stored in macOS Keychain
+- **Test Connection**: Verify your API key works
 
 ### Prompts
 - View and manage your text transformation prompts
 - Assign global hotkeys to each prompt
-- Enable/disable prompts as needed
+- Enable/disable prompts with toggle switch
+- Test prompts with sample text before saving
 
 ## Troubleshooting
 
@@ -108,10 +120,12 @@ Settings are organized into three tabs: **General → API → Prompts**
 
 ### Hotkeys not working
 - Check that the app has Accessibility permissions in System Settings
-- Make sure the hotkey isn't conflicting with another app
+- Look for the warning icon (⚠️) next to prompts with conflicting hotkeys
+- Make sure the hotkey isn't conflicting with system shortcuts
 - Try re-recording the hotkey
 
 ### API errors
+- Use the "Test Connection" button in Providers settings
 - Verify your API key is correct
 - Check that you have credits/quota with your AI provider
 - Try a different model
@@ -148,6 +162,7 @@ Settings are organized into three tabs: **General → API → Prompts**
 - API keys are stored securely in your macOS Keychain
 - Text is sent directly to your chosen AI provider - not through any other servers
 - No data is collected or stored by this app
+- Clipboard is restored after each transformation
 
 ## Supported Models
 
@@ -163,11 +178,15 @@ Settings are organized into three tabs: **General → API → Prompts**
 ### Google Gemini
 - gemini-flash-lite-latest, gemini-flash-latest, gemini-2.5-flash, gemini-3-flash-preview, gemini-3-pro-preview
 
+You can add custom models via Settings → Providers → Manage Models.
+
 ## Tech Stack
 
 - SwiftUI for the interface
-- Carbon Events for global hotkey registration
+- Carbon Events API for global hotkey registration
+- CGEvent for simulating copy/paste keystrokes
 - Security framework for Keychain storage
+- UserNotifications for system notifications
 - URLSession for API calls
 
 ## Contributing
