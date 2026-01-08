@@ -7,6 +7,28 @@ DerivedData/
 xcuserdata/
 *.xcscmblueprint
 *.xccheckout
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Package.resolved
+
+# CocoaPods / Carthage
+Pods/
+Carthage/Build/
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
 
 # DMG
 *.dmg
@@ -17,5 +39,17 @@ dmg_contents/
 .AppleDouble
 .LSOverride
 
-# Export options (contains signing info)
+# IDE
+.cursor/
+.idea/
+*.swp
+*.swo
+*~
+
+# Claude Code
+.claude/
+
+# Project-specific
 ExportOptions.plist
+CLAUDE.md
+Config.local.xcconfig

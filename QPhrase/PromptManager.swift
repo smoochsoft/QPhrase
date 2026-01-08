@@ -9,13 +9,64 @@ struct Prompt: Identifiable, Codable, Equatable, Hashable {
     var instruction: String
     var hotkey: HotkeyConfig?
     var isEnabled: Bool
-    
-    init(id: UUID = UUID(), name: String, instruction: String, hotkey: HotkeyConfig? = nil, isEnabled: Bool = true) {
+    var icon: String  // SF Symbol name for the prompt
+
+    init(id: UUID = UUID(), name: String, instruction: String, hotkey: HotkeyConfig? = nil, isEnabled: Bool = true, icon: String = "sparkles") {
         self.id = id
         self.name = name
         self.instruction = instruction
         self.hotkey = hotkey
         self.isEnabled = isEnabled
+        self.icon = icon
+    }
+
+    // Custom decoder to handle existing prompts without icon field
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        instruction = try container.decode(String.self, forKey: .instruction)
+        hotkey = try container.decodeIfPresent(HotkeyConfig.self, forKey: .hotkey)
+        isEnabled = try container.decode(Bool.self, forKey: .isEnabled)
+        icon = try container.decodeIfPresent(String.self, forKey: .icon) ?? Self.defaultIcon(for: name)
+    }
+
+    // Suggest SF Symbol based on prompt name
+    static func defaultIcon(for name: String) -> String {
+        let lowercased = name.lowercased()
+        if lowercased.contains("grammar") || lowercased.contains("fix") { return "pencil.line" }
+        if lowercased.contains("professional") || lowercased.contains("formal") { return "briefcase" }
+        if lowercased.contains("concise") || lowercased.contains("short") { return "scissors" }
+        if lowercased.contains("friendly") || lowercased.contains("casual") { return "face.smiling" }
+        if lowercased.contains("expand") || lowercased.contains("elaborate") { return "text.alignleft" }
+        if lowercased.contains("translate") { return "globe" }
+        if lowercased.contains("summarize") || lowercased.contains("summary") { return "list.clipboard" }
+        if lowercased.contains("email") { return "envelope" }
+        if lowercased.contains("code") || lowercased.contains("program") { return "laptopcomputer" }
+        return "sparkles"
+    }
+
+    // Convert emoji to SF Symbol for migration
+    static func emojiToSFSymbol(_ emoji: String) -> String? {
+        let mapping: [String: String] = [
+            "✏️": "pencil.line",
+            "💼": "briefcase",
+            "✂️": "scissors",
+            "😊": "face.smiling",
+            "📝": "text.alignleft",
+            "🌍": "globe",
+            "📋": "list.clipboard",
+            "📧": "envelope",
+            "💻": "laptopcomputer",
+            "🔧": "wrench.and.screwdriver",
+            "💡": "lightbulb",
+            "🎯": "target",
+            "📊": "chart.bar",
+            "🔍": "magnifyingglass",
+            "✅": "checkmark.circle",
+            "✨": "sparkles"
+        ]
+        return mapping[emoji]
     }
 }
 
@@ -75,27 +126,32 @@ class PromptManager: ObservableObject {
             Prompt(
                 name: "Fix Grammar",
                 instruction: "Fix any grammar, spelling, and punctuation errors in the following text. Preserve all formatting, markdown, code blocks, lists, and special characters exactly as they appear. Maintain the same tone, meaning, and approximate length. Only output the corrected text, nothing else.",
-                hotkey: HotkeyConfig(keyCode: 5, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧G
+                hotkey: HotkeyConfig(keyCode: 5, modifiers: UInt32(cmdKey | shiftKey)), // ⌘⇧G
+                icon: "pencil.line"
             ),
             Prompt(
                 name: "Make Professional",
                 instruction: "Rewrite the following text to sound more professional and polished. Preserve all formatting, markdown, code blocks, and special characters. Keep the same meaning and approximate length. Only output the rewritten text, nothing else.",
-                hotkey: HotkeyConfig(keyCode: 35, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧P
+                hotkey: HotkeyConfig(keyCode: 35, modifiers: UInt32(cmdKey | shiftKey)), // ⌘⇧P
+                icon: "briefcase"
             ),
             Prompt(
                 name: "Make Concise",
                 instruction: "Rewrite the following text to be more concise while keeping all key points. Preserve any formatting, markdown, code blocks, and special characters. Only output the rewritten text, nothing else.",
-                hotkey: HotkeyConfig(keyCode: 8, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧C
+                hotkey: HotkeyConfig(keyCode: 8, modifiers: UInt32(cmdKey | shiftKey)), // ⌘⇧C
+                icon: "scissors"
             ),
             Prompt(
                 name: "Make Friendly",
                 instruction: "Rewrite the following text to sound friendlier and more casual. Preserve all formatting, markdown, code blocks, and special characters. Keep the same meaning and approximate length. Only output the rewritten text, nothing else.",
-                hotkey: HotkeyConfig(keyCode: 3, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧F
+                hotkey: HotkeyConfig(keyCode: 3, modifiers: UInt32(cmdKey | shiftKey)), // ⌘⇧F
+                icon: "face.smiling"
             ),
             Prompt(
                 name: "Expand",
                 instruction: "Expand the following text with more detail and explanation while keeping the same meaning and tone. Preserve all formatting, markdown, code blocks, and special characters. Only output the expanded text, nothing else.",
-                hotkey: HotkeyConfig(keyCode: 14, modifiers: UInt32(cmdKey | shiftKey)) // ⌘⇧E
+                hotkey: HotkeyConfig(keyCode: 14, modifiers: UInt32(cmdKey | shiftKey)), // ⌘⇧E
+                icon: "text.alignleft"
             )
         ]
         savePrompts()
@@ -127,7 +183,30 @@ class PromptManager: ObservableObject {
     func loadPrompts() {
         if let data = UserDefaults.standard.data(forKey: saveKey),
            let decoded = try? JSONDecoder().decode([Prompt].self, from: data) {
-            prompts = decoded
+            // Migrate emoji icons to SF Symbols if needed
+            let needsMigration = decoded.contains { icon in
+                icon.icon.count <= 2 // Likely emoji (1-2 characters)
+            }
+
+            if needsMigration && !UserDefaults.standard.bool(forKey: "IconsMigrated_v1") {
+                prompts = decoded.map { prompt in
+                    var updated = prompt
+                    // If icon looks like emoji (short string), try to migrate
+                    if prompt.icon.count <= 2 {
+                        if let sfSymbol = Prompt.emojiToSFSymbol(prompt.icon) {
+                            updated.icon = sfSymbol
+                        } else {
+                            // Fallback to default based on name
+                            updated.icon = Prompt.defaultIcon(for: prompt.name)
+                        }
+                    }
+                    return updated
+                }
+                savePrompts()
+                UserDefaults.standard.set(true, forKey: "IconsMigrated_v1")
+            } else {
+                prompts = decoded
+            }
         }
     }
 }

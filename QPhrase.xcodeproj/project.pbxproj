@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3E91FD740985472796FE9B95 /* PreviewWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCC05124F06A4E70896F67A1 /* PreviewWindow.swift */; };
 		001 /* QPhraseApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* QPhraseApp.swift */; };
 		002 /* PromptManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* PromptManager.swift */; };
 		003 /* SettingsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* SettingsManager.swift */; };
@@ -15,9 +16,15 @@
 		006 /* MenuBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* MenuBarView.swift */; };
 		007 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 107 /* SettingsView.swift */; };
 		008 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 108 /* Assets.xcassets */; };
+		009 /* TransformationHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TransformationHistory.swift */; };
+		C9796D2AD6CDA11712B12981 /* QPhraseDesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA7B71A63BCE31F1E8EE47E9 /* QPhraseDesignSystem.swift */; };
+		A1779E4B89744367A56C04DB /* SparkleOverlayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA7BDB135AE14138B3D061D4 /* SparkleOverlayManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		CFGLOCAL /* Config.local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.local.xcconfig; sourceTree = "<group>"; };
+		CFGTEMPLATE /* Config.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Config.xcconfig.template; sourceTree = "<group>"; };
+		DCC05124F06A4E70896F67A1 /* PreviewWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreviewWindow.swift; sourceTree = "<group>"; };
 		100 /* QPhrase.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QPhrase.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		101 /* QPhraseApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QPhraseApp.swift; sourceTree = "<group>"; };
 		102 /* PromptManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptManager.swift; sourceTree = "<group>"; };
@@ -29,6 +36,9 @@
 		108 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		109 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		110 /* QPhrase.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = QPhrase.entitlements; sourceTree = "<group>"; };
+		111 /* TransformationHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransformationHistory.swift; sourceTree = "<group>"; };
+		EA7B71A63BCE31F1E8EE47E9 /* QPhraseDesignSystem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QPhraseDesignSystem.swift; sourceTree = "<group>"; };
+		DA7BDB135AE14138B3D061D4 /* SparkleOverlayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SparkleOverlayManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -45,6 +55,8 @@
 		300 = {
 			isa = PBXGroup;
 			children = (
+				CFGTEMPLATE /* Config.xcconfig.template */,
+				CFGLOCAL /* Config.local.xcconfig */,
 				301 /* QPhrase */,
 				302 /* Products */,
 			);
@@ -53,6 +65,7 @@
 		301 /* QPhrase */ = {
 			isa = PBXGroup;
 			children = (
+				DCC05124F06A4E70896F67A1 /* PreviewWindow.swift */,
 				101 /* QPhraseApp.swift */,
 				102 /* PromptManager.swift */,
 				103 /* SettingsManager.swift */,
@@ -60,9 +73,12 @@
 				105 /* HotkeyManager.swift */,
 				106 /* MenuBarView.swift */,
 				107 /* SettingsView.swift */,
+				111 /* TransformationHistory.swift */,
 				108 /* Assets.xcassets */,
 				109 /* Info.plist */,
 				110 /* QPhrase.entitlements */,
+				EA7B71A63BCE31F1E8EE47E9 /* QPhraseDesignSystem.swift */,
+				DA7BDB135AE14138B3D061D4 /* SparkleOverlayManager.swift */,
 			);
 			path = QPhrase;
 			sourceTree = "<group>";
@@ -151,6 +167,10 @@
 				005 /* HotkeyManager.swift in Sources */,
 				006 /* MenuBarView.swift in Sources */,
 				007 /* SettingsView.swift in Sources */,
+				009 /* TransformationHistory.swift in Sources */,
+				C9796D2AD6CDA11712B12981 /* QPhraseDesignSystem.swift in Sources */,
+				3E91FD740985472796FE9B95 /* PreviewWindow.swift in Sources */,
+				A1779E4B89744367A56C04DB /* SparkleOverlayManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,6 +297,7 @@
 		};
 		702 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CFGLOCAL /* Config.local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -285,7 +306,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 83J33PGX2K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QPhrase/Info.plist;
@@ -296,7 +317,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.qphrase.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.qphrase;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -305,6 +326,7 @@
 		};
 		703 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CFGLOCAL /* Config.local.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -313,7 +335,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 83J33PGX2K;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = QPhrase/Info.plist;
@@ -324,7 +346,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MARKETING_VERSION = 1.0.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.qphrase.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.qphrase;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

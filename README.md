@@ -10,6 +10,8 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 - **Custom Prompts** - Create your own text transformations (fix grammar, make professional, summarize, etc.)
 - **Global Hotkeys** - Assign keyboard shortcuts to each prompt
 - **Multiple AI Providers** - Choose between OpenAI, Anthropic, Groq, or Google Gemini
+- **Preview with Diff** - See changes highlighted character-by-character before applying
+- **Transformation History** - Review and reuse recent transformations
 - **Privacy First** - Your API key stays on your Mac (stored in Keychain)
 - **Menu Bar App** - Lives quietly in your menu bar, always ready
 
@@ -25,8 +27,17 @@ A lightweight macOS menu bar app that lets you transform text anywhere using AI.
 ### From Source (Xcode Required)
 
 1. Clone or download this repository
-2. Open `QPhrase.xcodeproj` in Xcode
-3. Select your development team in Signing & Capabilities
+2. **Configure signing** (required):
+   ```bash
+   cp Config.xcconfig.template Config.local.xcconfig
+   ```
+   Edit `Config.local.xcconfig` and add your Development Team ID and Bundle Identifier:
+   ```
+   DEVELOPMENT_TEAM = YOUR_TEAM_ID
+   PRODUCT_BUNDLE_IDENTIFIER = com.yourname.qphrase
+   ```
+   To find your Team ID: Xcode → Settings → Accounts → Select team → View Details
+3. Open `QPhrase.xcodeproj` in Xcode
 4. Build and run (⌘R)
 5. The app will appear in your menu bar
 
@@ -140,12 +151,38 @@ Settings are organized into three tabs: **General → API → Prompts**
 - Text is sent directly to your chosen AI provider - not through any other servers
 - No data is collected or stored by this app
 
+## Supported Models
+
+### OpenAI (Responses API)
+- gpt-4.1-nano, gpt-4.1-mini, gpt-5-nano, gpt-4.1, gpt-5-mini
+
+### Anthropic
+- claude-opus-4.5, claude-sonnet-4.5, claude-3.7-sonnet, claude-3-5-haiku
+
+### Groq
+- llama-3.3-70b-versatile, llama-4-scout-17b, gpt-oss-120b, qwen-qwq-32b, llama-3.1-8b-instant
+
+### Google Gemini
+- gemini-flash-lite-latest, gemini-flash-latest, gemini-2.5-flash, gemini-3-flash-preview, gemini-3-pro-preview
+
 ## Tech Stack
 
 - SwiftUI for the interface
 - Carbon Events for global hotkey registration
 - Security framework for Keychain storage
 - URLSession for API calls
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Set up signing (see Installation)
+4. Make your changes
+5. Commit (`git commit -m 'Add amazing feature'`)
+6. Push (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+Note: `Config.local.xcconfig` is gitignored - each contributor uses their own signing configuration.
 
 ## License
 

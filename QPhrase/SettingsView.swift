@@ -9,16 +9,41 @@ struct SettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // App Logo Header
+            HStack(spacing: 12) {
+                Image("AppLogo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .shadow(color: .black.opacity(0.1), radius: 2, y: 1)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("QPhrase")
+                        .font(.title2.weight(.semibold))
+                    Text("AI-Powered Text Transformation")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color(NSColor.controlBackgroundColor))
+
+            Divider()
+
             TabView(selection: $selectedTab) {
                 GeneralSettingsView()
                     .tabItem {
-                        Label("General", systemImage: "gear")
+                        Label("Preferences", systemImage: "gear")
                     }
                     .tag(0)
 
                 APISettingsView()
                     .tabItem {
-                        Label("API", systemImage: "key")
+                        Label("Providers", systemImage: "network")
                     }
                     .tag(1)
 
@@ -55,16 +80,27 @@ struct SettingsView: View {
 // MARK: - General Settings
 struct GeneralSettingsView: View {
     @EnvironmentObject var settingsManager: SettingsManager
+    @State private var formID = UUID()
 
     var body: some View {
         Form {
             Section {
                 Toggle("Show notifications", isOn: $settingsManager.showNotifications)
+                    .toggleStyle(.switch)
+                    .controlSize(.regular)
                 Toggle("Play sounds", isOn: $settingsManager.playSound)
+                    .toggleStyle(.switch)
+                    .controlSize(.regular)
+                Toggle("Show overlay effects", isOn: $settingsManager.showOverlayEffects)
+                    .toggleStyle(.switch)
+                    .controlSize(.regular)
+                Toggle("Preview transformations", isOn: $settingsManager.showPreview)
+                    .toggleStyle(.switch)
+                    .controlSize(.regular)
             } header: {
                 Text("Feedback")
             } footer: {
-                Text("Get notified when transformations complete or encounter errors.")
+                Text("Preview lets you review and edit AI transformations before applying them. Overlay effects show sparkle animations near your cursor when transformations are active.")
                     .foregroundColor(.secondary)
             }
 
@@ -79,6 +115,12 @@ struct GeneralSettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+        .id(formID)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                formID = UUID()
+            }
+        }
     }
 }
 
@@ -89,6 +131,8 @@ struct LaunchAtLoginToggle: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Toggle("Launch at login", isOn: $launchAtLogin)
+                .toggleStyle(.switch)
+                .controlSize(.regular)
                 .onChange(of: launchAtLogin) { newValue in
                     setLaunchAtLogin(enabled: newValue)
                 }
@@ -119,10 +163,55 @@ struct LaunchAtLoginToggle: View {
     }
 }
 
+/// MARK: - Provider Tile Component
+struct ProviderTile: View {
+    let provider: SettingsManager.AIProvider
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Image(provider.theme.logoImage)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 48, height: 48)
+
+            Text(provider.theme.displayName)
+                .font(.caption.weight(.semibold))
+                .foregroundColor(.primary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(isSelected ? provider.theme.color.opacity(0.15) : Color.clear)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(isSelected ? provider.theme.color : Color.secondary.opacity(0.3), lineWidth: isSelected ? 2 : 1)
+                )
+        )
+        .contentShape(Rectangle())  // Make entire area clickable
+        .onTapGesture {
+            action()
+        }
+        .onHover { hovering in
+            if hovering {
+                NSCursor.pointingHand.push()
+            } else {
+                NSCursor.pop()
+            }
+        }
+        .help("Select \(provider.theme.displayName)")
+    }
+}
+
 // MARK: - API Settings
 struct APISettingsView: View {
     @EnvironmentObject var settingsManager: SettingsManager
     @State private var showAPIKey = false
+    @State private var isTestingConnection = false
+    @State private var connectionTestResult: (success: Bool, message: String)?
 
     private var currentKeyBinding: Binding<String> {
         switch settingsManager.selectedProvider {
@@ -153,28 +242,38 @@ struct APISettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker("", selection: $settingsManager.selectedProvider) {
+                // Provider tiles
+                HStack(spacing: 12) {
                     ForEach(SettingsManager.AIProvider.allCases, id: \.self) { provider in
-                        Text(provider.rawValue).tag(provider)
+                        ProviderTile(
+                            provider: provider,
+                            isSelected: settingsManager.selectedProvider == provider,
+                            action: {
+                                settingsManager.selectedProvider = provider
+                            }
+                        )
                     }
                 }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-                .padding(.vertical, 4)
+                .padding(.vertical, 8)
             } header: {
-                Text("Provider")
+                Text("Select Provider")
             }
 
             Section {
                 Picker("Model", selection: $settingsManager.selectedModel) {
-                    ForEach(settingsManager.selectedProvider.models, id: \.self) { model in
-                        Text(model).tag(model)
+                    ForEach(settingsManager.currentProviderModels, id: \.self) { model in
+                        Text(settingsManager.modelDisplayName(for: model)).tag(model)
                     }
                 }
                 .onChange(of: settingsManager.selectedProvider) { _ in
-                    settingsManager.selectedModel = settingsManager.selectedProvider.models.first ?? ""
-                    showAPIKey = false
+                    DispatchQueue.main.async {
+                        settingsManager.selectedModel = settingsManager.currentProviderModels.first ?? ""
+                        showAPIKey = false
+                    }
                 }
+
+                // Model management
+                ModelManagementView()
 
                 HStack(spacing: 12) {
                     if showAPIKey {
@@ -198,10 +297,38 @@ struct APISettingsView: View {
                     }
                 }
 
+                // Test connection button
+                HStack {
+                    Button(action: { Task { await testConnection() } }) {
+                        HStack(spacing: 6) {
+                            if isTestingConnection {
+                                ProgressView()
+                                    .scaleEffect(0.7)
+                                    .frame(width: 12, height: 12)
+                            } else {
+                                Image(systemName: "network")
+                            }
+                            Text("Test Connection")
+                        }
+                    }
+                    .disabled(currentKeyBinding.wrappedValue.isEmpty || isTestingConnection)
+                    .buttonStyle(.bordered)
+
+                    if let testResult = connectionTestResult {
+                        Label(testResult.message, systemImage: testResult.success ? "checkmark.circle" : "xmark.circle")
+                            .font(.caption)
+                            .foregroundColor(testResult.success ? .green : .red)
+                    }
+                }
+
                 Link("Get \(settingsManager.selectedProvider.rawValue) API Key →", destination: URL(string: apiKeyLink)!)
                     .font(.callout)
             } header: {
-                Text("Configuration")
+                HStack(spacing: 8) {
+                    Image(systemName: settingsManager.selectedProvider.theme.icon)
+                        .foregroundColor(settingsManager.selectedProvider.theme.color)
+                    Text("\(settingsManager.selectedProvider.theme.displayName) Configuration")
+                }
             } footer: {
                 Text("Your API key is stored securely in the macOS Keychain.")
                     .foregroundColor(.secondary)
@@ -209,6 +336,114 @@ struct APISettingsView: View {
         }
         .formStyle(.grouped)
         .padding()
+    }
+
+    private func testConnection() async {
+        isTestingConnection = true
+        connectionTestResult = nil
+
+        do {
+            // Create a temporary test prompt
+            let testPrompt = Prompt(
+                name: "Test",
+                instruction: "Say 'OK' if you can read this",
+                icon: "checkmark.circle"
+            )
+            let _ = try await AIService.shared.transform(
+                text: "test",
+                prompt: testPrompt,
+                settings: settingsManager
+            )
+            connectionTestResult = (success: true, message: "Connection successful")
+        } catch {
+            connectionTestResult = (success: false, message: "Connection failed: \(error.localizedDescription)")
+        }
+
+        isTestingConnection = false
+    }
+}
+
+// MARK: - Model Management
+struct ModelManagementView: View {
+    @EnvironmentObject var settingsManager: SettingsManager
+    @State private var newModelName: String = ""
+    @State private var isExpanded: Bool = false
+
+    var body: some View {
+        DisclosureGroup("Manage Models", isExpanded: $isExpanded) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Add new model
+                HStack(spacing: 8) {
+                    TextField("Add custom model...", text: $newModelName)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            addModel()
+                        }
+
+                    Button(action: addModel) {
+                        Image(systemName: "plus.circle.fill")
+                            .foregroundColor(.accentColor)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(newModelName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+
+                // Model list
+                if !settingsManager.currentProviderModels.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        ForEach(settingsManager.currentProviderModels, id: \.self) { model in
+                            HStack {
+                                Text(model)
+                                    .font(.callout)
+
+                                if settingsManager.isDefaultModel(model, for: settingsManager.selectedProvider) {
+                                    Text("default")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Color.secondary.opacity(0.15))
+                                        .clipShape(Capsule())
+                                }
+
+                                Spacer()
+
+                                if !settingsManager.isDefaultModel(model, for: settingsManager.selectedProvider) {
+                                    Button(action: {
+                                        settingsManager.removeCustomModel(model, for: settingsManager.selectedProvider)
+                                    }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .help("Remove custom model")
+                                }
+                            }
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 8)
+                            .background(
+                                settingsManager.selectedModel == model
+                                    ? Color.accentColor.opacity(0.1)
+                                    : Color.clear
+                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                    }
+                }
+
+                Text("Custom models allow you to use new models as they become available.")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.top, 8)
+        }
+    }
+
+    private func addModel() {
+        let trimmed = newModelName.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        settingsManager.addCustomModel(trimmed, for: settingsManager.selectedProvider)
+        newModelName = ""
     }
 }
 
@@ -283,27 +518,28 @@ struct PromptsSettingsView: View {
             // Detail
             if let prompt = selectedPrompt {
                 PromptDetailView(prompt: prompt, editorMode: $editorMode)
+                    .frame(minWidth: 350)
             } else {
                 VStack(spacing: 12) {
                     Image(systemName: "text.bubble")
                         .font(.system(size: 40))
-                        .foregroundColor(.secondary.opacity(0.5))
+                        .foregroundColor(.secondary.opacity(0.65))
                     Text("Select a prompt")
                         .font(.headline)
                         .foregroundColor(.secondary)
                     Text("Choose a prompt from the list to view and edit its details.")
                         .font(.caption)
-                        .foregroundColor(.secondary.opacity(0.8))
+                        .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .frame(maxWidth: 200)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(minWidth: 350, maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .sheet(item: $editorMode) { mode in
             PromptEditorView(prompt: mode.prompt) { saved in
                 if case .edit(let original) = mode {
-                    let updated = Prompt(id: original.id, name: saved.name, instruction: saved.instruction, hotkey: saved.hotkey, isEnabled: saved.isEnabled)
+                    let updated = Prompt(id: original.id, name: saved.name, instruction: saved.instruction, hotkey: saved.hotkey, isEnabled: saved.isEnabled, icon: saved.icon)
                     promptManager.updatePrompt(updated)
                     selectedPrompt = updated
                 } else {
@@ -321,10 +557,18 @@ struct PromptListRow: View {
     let hasConflict: Bool
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
+            // SF Symbol icon with colored circular background
+            PromptIconView(
+                iconName: prompt.icon,
+                color: IconColorMapper.color(for: prompt.icon),
+                size: 28
+            )
+
             VStack(alignment: .leading, spacing: 3) {
                 Text(prompt.name)
                     .fontWeight(.medium)
+                    .foregroundColor(.primary)
                 if let hotkey = prompt.hotkey {
                     HStack(spacing: 4) {
                         HotkeyBadge(hotkey: hotkey)
@@ -356,10 +600,17 @@ struct PromptDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
-            HStack(alignment: .center) {
+            HStack(alignment: .center, spacing: 12) {
+                PromptIconView(
+                    iconName: prompt.icon,
+                    color: IconColorMapper.color(for: prompt.icon),
+                    size: 36
+                )
+
                 Text(prompt.name)
                     .font(.title2)
                     .fontWeight(.semibold)
+                    .foregroundColor(.primary)
 
                 Spacer()
 
@@ -404,12 +655,13 @@ struct PromptDetailView: View {
                 ScrollView {
                     Text(prompt.instruction)
                         .font(.callout)
+                        .foregroundColor(.primary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .textSelection(.enabled)
                 }
                 .frame(maxHeight: .infinity)
                 .padding(12)
-                .background(Color(.textBackgroundColor).opacity(0.5))
+                .background(Color(.textBackgroundColor).opacity(0.8))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
             }
 
@@ -431,14 +683,59 @@ struct PromptDetailView: View {
 
 struct PromptEditorView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var settingsManager: SettingsManager
     @State private var name: String
     @State private var instruction: String
     @State private var isEnabled: Bool
+    @State private var icon: String
     @State private var hotkeyConfig: HotkeyConfig?
     @State private var isRecordingHotkey = false
+    @State private var showEmojiPicker = false
+
+    // Test prompt states
+    @State private var testInput: String = ""
+    @State private var testOutput: String = ""
+    @State private var isTesting = false
+    @State private var showTestSection = false
 
     let prompt: Prompt?
     let onSave: (Prompt) -> Void
+
+    private let commonEmojis = ["✨", "✏️", "💼", "✂️", "😊", "📝", "🌍", "📋", "📧", "💻", "🔧", "💡", "🎯", "📊", "🔍", "✅"]
+
+    // Common SF Symbols for quick selection - organized by category
+    private let commonSymbols = [
+        // Text & Writing
+        "pencil.line", "pencil.tip", "square.and.pencil", "text.alignleft",
+        "character.cursor.ibeam", "text.quote", "text.aligncenter", "text.alignright",
+
+        // Communication
+        "envelope", "paperplane", "bubble.left", "bubble.right",
+        "ellipsis.bubble", "quote.bubble",
+
+        // Work & Productivity
+        "briefcase", "calendar", "clock", "timer", "list.bullet",
+        "list.number", "checklist", "folder", "doc.text", "doc.richtext",
+
+        // Creative
+        "paintbrush", "paintpalette", "wand.and.stars", "sparkles",
+        "star.fill", "lightbulb", "lightbulb.fill",
+
+        // Technical
+        "terminal", "chevron.left.forwardslash.chevron.right", "curlybraces",
+        "function", "arrow.triangle.2.circlepath",
+
+        // Science & Analysis
+        "chart.bar", "chart.line.uptrend.xyaxis", "magnifyingglass",
+        "cube", "atom",
+
+        // Social & People
+        "person", "person.2", "face.smiling", "hand.thumbsup",
+
+        // Objects
+        "globe", "map", "flag", "tag", "scissors",
+        "wrench.and.screwdriver", "laptopcomputer", "target"
+    ]
 
     init(prompt: Prompt?, onSave: @escaping (Prompt) -> Void) {
         self.prompt = prompt
@@ -446,6 +743,7 @@ struct PromptEditorView: View {
         _name = State(initialValue: prompt?.name ?? "")
         _instruction = State(initialValue: prompt?.instruction ?? "")
         _isEnabled = State(initialValue: prompt?.isEnabled ?? true)
+        _icon = State(initialValue: prompt?.icon ?? "sparkles")
         _hotkeyConfig = State(initialValue: prompt?.hotkey)
     }
 
@@ -457,99 +755,201 @@ struct PromptEditorView: View {
                 .padding(.top, 20)
                 .padding(.bottom, 16)
 
-            // Form
-            VStack(alignment: .leading, spacing: 20) {
-                // Name
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Name")
-                        .font(.callout)
-                        .fontWeight(.medium)
-                    TextField("e.g., Fix Grammar", text: $name)
-                        .textFieldStyle(.roundedBorder)
-                }
-
-                // Hotkey
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Hotkey")
-                        .font(.callout)
-                        .fontWeight(.medium)
-
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Name and Icon row
                     HStack(spacing: 12) {
-                        if isRecordingHotkey {
-                            Text("Press keys...")
+                        // Icon picker
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Icon")
                                 .font(.callout)
-                                .foregroundColor(.accentColor)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.accentColor.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 6))
-                        } else if let hotkey = hotkeyConfig {
-                            HStack {
-                                HotkeyBadge(hotkey: hotkey, style: .large)
-                                Spacer()
-                                Button(action: { hotkeyConfig = nil }) {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color(.controlBackgroundColor))
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                        } else {
-                            Text("None")
-                                .font(.callout)
-                                .foregroundColor(.secondary)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
+                                .fontWeight(.medium)
+
+                            Button(action: { showEmojiPicker.toggle() }) {
+                                PromptIconView(
+                                    iconName: icon,
+                                    color: IconColorMapper.color(for: icon),
+                                    size: 32
+                                )
+                                .frame(width: 44, height: 44)
                                 .background(Color(.controlBackgroundColor))
                                 .clipShape(RoundedRectangle(cornerRadius: 6))
+                            }
+                            .buttonStyle(.plain)
+                            .popover(isPresented: $showEmojiPicker) {
+                                SFSymbolPickerView(selectedSymbol: $icon, symbols: commonSymbols)
+                            }
                         }
 
-                        Button(isRecordingHotkey ? "Cancel" : "Record") {
-                            isRecordingHotkey.toggle()
+                        // Name
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Name")
+                                .font(.callout)
+                                .fontWeight(.medium)
+                            TextField("e.g., Fix Grammar", text: $name)
+                                .textFieldStyle(.roundedBorder)
+                                .onChange(of: name) { newName in
+                                    if icon == "sparkles" && !newName.isEmpty {
+                                        icon = Prompt.defaultIcon(for: newName)
+                                    }
+                                }
                         }
-                        .buttonStyle(.bordered)
+                    }
+
+                    // Hotkey
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Hotkey")
+                            .font(.callout)
+                            .fontWeight(.medium)
+
+                        HStack(spacing: 12) {
+                            if isRecordingHotkey {
+                                Text("Press keys...")
+                                    .font(.callout)
+                                    .foregroundColor(.accentColor)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color.accentColor.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            } else if let hotkey = hotkeyConfig {
+                                HStack {
+                                    HotkeyBadge(hotkey: hotkey, style: .large)
+                                    Spacer()
+                                    Button(action: { hotkeyConfig = nil }) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.secondary)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color(.controlBackgroundColor))
+                                .clipShape(RoundedRectangle(cornerRadius: 6))
+                            } else {
+                                Text("None")
+                                    .font(.callout)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .background(Color(.controlBackgroundColor))
+                                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                            }
+
+                            Button(isRecordingHotkey ? "Cancel" : "Record") {
+                                isRecordingHotkey.toggle()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                    .onReceive(NotificationCenter.default.publisher(for: .hotkeyRecorded)) { notification in
+                        if isRecordingHotkey, let config = notification.object as? HotkeyConfig {
+                            hotkeyConfig = config
+                            isRecordingHotkey = false
+                        }
+                    }
+
+                    // Instruction
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Instruction")
+                            .font(.callout)
+                            .fontWeight(.medium)
+                        TextEditor(text: $instruction)
+                            .font(.callout)
+                            .frame(height: 100)
+                            .padding(4)
+                            .background(Color(.textBackgroundColor))
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 6)
+                                    .stroke(Color(.separatorColor), lineWidth: 1)
+                            )
+                    }
+
+                    // Enabled toggle
+                    Toggle("Enabled", isOn: $isEnabled)
+                        .font(.callout)
+
+                    // Test Prompt Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button(action: { withAnimation(.spring(response: 0.3)) { showTestSection.toggle() } }) {
+                            HStack {
+                                Image(systemName: "play.circle")
+                                    .foregroundColor(.accentColor)
+                                Text("Test Prompt")
+                                    .font(.callout)
+                                    .fontWeight(.medium)
+                                Spacer()
+                                Image(systemName: showTestSection ? "chevron.up" : "chevron.down")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .buttonStyle(.plain)
+
+                        if showTestSection {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Sample text:")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+
+                                TextField("Enter text to test...", text: $testInput, axis: .vertical)
+                                    .textFieldStyle(.roundedBorder)
+                                    .lineLimit(2...4)
+
+                                HStack {
+                                    Button(action: runTest) {
+                                        HStack(spacing: 4) {
+                                            if isTesting {
+                                                ProgressView()
+                                                    .scaleEffect(0.7)
+                                            } else {
+                                                Image(systemName: "play.fill")
+                                            }
+                                            Text(isTesting ? "Testing..." : "Run Test")
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(testInput.isEmpty || instruction.isEmpty || isTesting || !settingsManager.isConfigured)
+
+                                    if !settingsManager.isConfigured {
+                                        Text("Configure API key first")
+                                            .font(.caption)
+                                            .foregroundColor(.orange)
+                                    }
+                                }
+
+                                if !testOutput.isEmpty {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Result:")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+
+                                        Text(testOutput)
+                                            .font(.callout)
+                                            .foregroundColor(.primary)
+                                            .padding(8)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .background(Color.green.opacity(0.1))
+                                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                                            .textSelection(.enabled)
+                                    }
+                                }
+                            }
+                            .padding(12)
+                            .background(Color(.controlBackgroundColor).opacity(0.8))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                     }
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .hotkeyRecorded)) { notification in
-                    if isRecordingHotkey, let config = notification.object as? HotkeyConfig {
-                        hotkeyConfig = config
-                        isRecordingHotkey = false
-                    }
-                }
-
-                // Instruction
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Instruction")
-                        .font(.callout)
-                        .fontWeight(.medium)
-                    TextEditor(text: $instruction)
-                        .font(.callout)
-                        .frame(height: 120)
-                        .padding(4)
-                        .background(Color(.textBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color(.separatorColor), lineWidth: 1)
-                        )
-                }
-
-                // Enabled
-                Toggle("Enabled", isOn: $isEnabled)
-                    .font(.callout)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 16)
             }
-            .padding(.horizontal, 24)
-
-            Spacer()
 
             Divider()
-                .padding(.top, 16)
 
             // Actions
             HStack {
@@ -566,7 +966,8 @@ struct PromptEditorView: View {
                         name: name,
                         instruction: instruction,
                         hotkey: hotkeyConfig,
-                        isEnabled: isEnabled
+                        isEnabled: isEnabled,
+                        icon: icon
                     )
                     onSave(newPrompt)
                     dismiss()
@@ -577,8 +978,106 @@ struct PromptEditorView: View {
             }
             .padding(20)
         }
-        .frame(width: 480, height: 450)
+        .frame(width: 520, height: 580)
         .background(HotkeyRecorderView(isRecording: $isRecordingHotkey))
+    }
+
+    private func runTest() {
+        guard !testInput.isEmpty, !instruction.isEmpty else { return }
+
+        isTesting = true
+        testOutput = ""
+
+        let testPrompt = Prompt(name: name, instruction: instruction, icon: icon)
+
+        Task {
+            do {
+                let result = try await AIService.shared.transform(
+                    text: testInput,
+                    prompt: testPrompt,
+                    settings: settingsManager
+                )
+                await MainActor.run {
+                    testOutput = result
+                    isTesting = false
+                }
+            } catch {
+                await MainActor.run {
+                    testOutput = "Error: \(error.localizedDescription)"
+                    isTesting = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Emoji Picker (Legacy - keeping for backward compatibility)
+struct EmojiPickerView: View {
+    @Binding var selectedEmoji: String
+    let emojis: [String]
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Choose Icon")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(36)), count: 4), spacing: 8) {
+                ForEach(emojis, id: \.self) { emoji in
+                    Button(action: {
+                        selectedEmoji = emoji
+                        dismiss()
+                    }) {
+                        Text(emoji)
+                            .font(.system(size: 20))
+                            .frame(width: 32, height: 32)
+                            .background(selectedEmoji == emoji ? Color.accentColor.opacity(0.2) : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(12)
+    }
+}
+
+// MARK: - SF Symbol Picker
+struct SFSymbolPickerView: View {
+    @Binding var selectedSymbol: String
+    let symbols: [String]
+    @Environment(\.dismiss) var dismiss
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Choose Icon")
+                .font(.caption)
+                .fontWeight(.medium)
+                .foregroundColor(.secondary)
+
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(44)), count: 4), spacing: 8) {
+                ForEach(symbols, id: \.self) { symbol in
+                    Button(action: {
+                        selectedSymbol = symbol
+                        dismiss()
+                    }) {
+                        PromptIconView(
+                            iconName: symbol,
+                            color: IconColorMapper.color(for: symbol),
+                            size: 24
+                        )
+                        .frame(width: 40, height: 40)
+                        .background(selectedSymbol == symbol ? Color.accentColor.opacity(0.15) : Color.clear)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(12)
+        .frame(width: 240)
     }
 }
 
@@ -594,6 +1093,7 @@ struct HotkeyBadge: View {
     var body: some View {
         Text(hotkey.displayString)
             .font(.system(style == .small ? .caption : .callout, design: .rounded, weight: .medium))
+            .foregroundColor(.primary)
             .padding(.horizontal, style == .small ? 6 : 10)
             .padding(.vertical, style == .small ? 3 : 5)
             .background(Color(.controlBackgroundColor))
@@ -626,7 +1126,7 @@ class HotkeyRecorderNSView: NSView {
         }
     }
 
-    override var acceptsFirstResponder: Bool { true }
+    override var acceptsFirstResponder: Bool { isRecording }
 
     override func keyDown(with event: NSEvent) {
         guard isRecording else {
@@ -656,6 +1156,7 @@ extension Notification.Name {
     static let processingStarted = Notification.Name("processingStarted")
     static let processingFinished = Notification.Name("processingFinished")
     static let hotkeyConflictDetected = Notification.Name("hotkeyConflictDetected")
+    static let transformationError = Notification.Name("transformationError")
 }
 
 #Preview {
